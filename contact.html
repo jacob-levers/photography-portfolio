@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Jacob Levers for photography inquiries, collaborations, or to say hello.">
+    <title>Contact | Jacob Levers</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="scrollable-page contact-page"> <header class="main-header">
+        <nav class="main-nav">
+            <a href="index.html" class="nav-logo">JACOB LEVERS</a>
+            <ul>
+                <li><a href="about.html">about</a></li>
+                <li><a href="work.html">work</a></li>
+                <li><a href="contact.html" class="active">contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="contact-section" class="page-section" data-nav-theme="light">
+            <div class="container">
+                <h1 class="page-title">Drop a Line</h1>
+                <p class="contact-intro">
+                    I'd love to hear from you! Please fill out the form below to send me a message directly,
+                    or you can email me at <a href="mailto:hello@jacoblevers.com" class="email-link">hello@jacoblevers.com</a>.
+                </p>
+
+                <form class="contact-form" action="https://formsubmit.co/hello@jacoblevers.com" method="POST">
+                    <input type="hidden" name="_next" value="http://127.0.0.1:5500/thanks.html">
+                    <input type="hidden" name="_captcha" value="false">
+                    
+                    <div class="form-group">
+                        <label for="contact-page-name">name</label>
+                        <input type="text" id="contact-page-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-page-email">email</label>
+                        <input type="email" id="contact-page-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-page-message">message</label>
+                        <textarea id="contact-page-message" name="message" rows="6" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn">send message</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

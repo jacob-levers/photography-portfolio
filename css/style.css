@@ -1,0 +1,874 @@
+/* ---
+   Website/css/style.css
+   Main stylesheet for Jacob Levers' photography portfolio.
+--- */
+
+/* --- 1. Global Resets & Base Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    height: 100%;
+}
+
+/* Font: Inter by rsms (https://github.com/rsms/inter)
+   Licensed under the SIL Open Font License, Version 1.1 (see Website/files/Inter.zip/OFL.txt) */
+body {
+    font-family: "Inter", sans-serif;
+    line-height: 1.6;
+    color: #DADBDF; /* Primary Text */
+    background-color: #353840; /* Primary Dark Background */
+    overflow-x: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+body.scrollable-page {
+    height: auto; /* Allow content to define height for scrollable pages */
+}
+
+/* --- 2. Layout & Utility Classes --- */
+.container {
+    width: 90%;
+    max-width: 1100px; /* Default max-width, carousel section might use a different one */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.page-section {
+    padding: 35px 0;
+}
+
+.page-section h2,
+.page-title {
+    text-align: center;
+    font-size: 2.4rem;
+    color: #FEFEFE; /* White */
+    margin-bottom: 25px;
+    font-weight: 300;
+}
+
+/* --- 3. Components --- */
+
+/* --- Navigation Bar (Unified Blur Pill Style) --- */
+.main-header {
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: transparent; /* Relies on nav's own background */
+}
+
+.main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto;
+    background-color: rgba(31, 33, 36, 0.78); /* Darkest, semi-transparent */
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 999px; /* Pill shape */
+    padding: 10px 28px;
+    border: 1px solid rgba(83, 88, 96, 0.5); /* Subtle border */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+}
+
+.nav-logo {
+    font-size: 1.7rem;
+    font-weight: bold;
+    text-decoration: none;
+    letter-spacing: -1px;
+    color: #FEFEFE; /* White */
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    transition: color 0.3s ease;
+}
+
+.main-nav ul {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.main-nav ul li {
+    margin-left: 28px;
+    position: relative; /* For underline animation */
+}
+
+.main-nav ul li a {
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    padding-bottom: 6px; /* Space for underline */
+    position: relative;
+    color: #BEC0C3; /* Muted Text */
+    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+    transition: color 0.3s ease;
+}
+
+.main-nav ul li a.active {
+    color: #5764F1; /* "Blurple-ish" for active link */
+    font-weight: 700;
+    text-shadow: none;
+}
+
+.main-nav ul li a:hover {
+    color: #FEFEFE; /* White on hover */
+}
+
+.main-nav ul li a::after { /* Underline effect */
+    content: '';
+    position: absolute;
+    height: 2px;
+    bottom: 0;
+    background-color: #5764F1; /* "Blurple-ish" line */
+    width: 0;
+    left: 0;
+}
+
+.main-nav ul li a:not(.active):hover::after {
+    animation: underlineSweep 0.6s ease-in-out;
+}
+
+.main-nav ul li a.active::after {
+    width: 100%;
+    background-color: #5764F1; /* "Blurple-ish" for active line */
+}
+
+/* --- General Button Style --- */
+.btn {
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #5764F1; /* "Blurple-ish" */
+    color: #FEFEFE; /* White text */
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-shadow: none;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.btn:hover,
+.btn:focus {
+    background-color: #4651C3; /* Slightly darker "Blurple-ish" */
+    color: #FEFEFE; /* White */
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    outline: none;
+}
+
+/* --- 4. Page-Specific Styles --- */
+
+/* Landing Page (splash.html) Background Slideshow */
+#background-slideshow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Behind content */
+}
+
+.slide { /* For landing page slideshow */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+.slide.active { /* For landing page slideshow */
+    opacity: 1;
+}
+
+#content-wrapper { /* For landing page content */
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    flex-grow: 1; /* Takes available space in flex column body */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+a.button-link,
+a.social-link {
+    text-decoration: none;
+}
+
+#enter-button {
+    background-color: rgba(87, 100, 241, 0.25); /* Semi-transparent "Blurple-ish" */
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid #5764f166; /* "Blurple-ish" border */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-shadow: 0px 0px 8px rgba(87, 100, 241, 0.5); /* "Blurple-ish" glow */
+    padding: 18px 70px;
+    font-size: 20px;
+    font-weight: 500;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    display: inline-block;
+    letter-spacing: 0.5px;
+}
+
+#enter-button:hover {
+    background-color: rgba(87, 100, 241, 0.4); /* "Blurple-ish" hover */
+    transform: scale(1.03);
+}
+
+.social-icons-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.social-icon { /* Button wrapper for social icons */
+    background-color: rgba(46, 48, 53, 0.5); /* Darker semi-transparent */
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(78, 83, 91, 0.3); /* Border */
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0; /* Reset button padding */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.social-icon:hover {
+    background-color: rgba(78, 83, 91, 0.7); /* Hover */
+    transform: scale(1.08);
+}
+
+.social-icon img { /* The SVG/image itself */
+    display: block;
+    width: 55%;
+    height: 55%;
+    object-fit: contain;
+    filter: brightness(0) invert(1); /* Makes icons white if they are black */
+}
+
+/* Resetting appearance for non-submit buttons for consistent styling */
+button:not([type="submit"]) {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+/* --- Home Page Styles (index.html) --- */
+#about-summary-home p {
+    font-size: 1.1rem;
+    color: #B8BABD; /* Muted text */
+    margin-bottom: 20px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+/* --- JL-CAROUSEL STYLES (Home Page Featured Photos) --- */
+#featured-photos-home {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.jl-carousel-viewport {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 30px auto;
+    overflow: hidden;
+}
+
+.jl-carousel-slides {
+    display: flex;
+}
+
+.jl-carousel-slide {
+    flex: 0 0 calc(100% / 3);
+    box-sizing: border-box;
+    padding: 0 10px;
+    text-align: center;
+    position: relative;
+    opacity: 0.6;
+    transform: scale(0.80);
+    filter: grayscale(100%);
+    will-change: transform, opacity, filter;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.5s ease-in-out;
+}
+
+.jl-carousel-slide.jl-no-transition-temporarily {
+    transition: none !important;
+}
+
+.jl-carousel-slide.jl-active-slide {
+    opacity: 1;
+    transform: scale(1);
+    filter: grayscale(0%);
+    z-index: 10;
+}
+
+.jl-carousel-slide.jl-no-transition-temporarily,
+.jl-carousel-slide.jl-no-transition-temporarily .jl-carousel-slide-caption {
+    transition: none !important;
+}
+
+.jl-carousel-slide.jl-prev-visible,
+.jl-carousel-slide.jl-next-visible {
+    opacity: 0.75;
+    transform: scale(0.90);
+    filter: grayscale(50%);
+    z-index: 5;
+}
+
+.jl-carousel-slide img {
+    display: block;
+    width: 100%;
+    height: 65vh;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    cursor: pointer; /* For potential lightbox functionality */
+}
+
+.jl-carousel-slide-caption {
+    position: absolute;
+    bottom: 0;
+    left: 10px;
+    right: 10px;
+    background: linear-gradient(to top, rgba(10, 10, 15, 0.95), rgba(10, 10, 15, 0.75));
+    color: #f0f1f2;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    text-align: left;
+    border-radius: 0 0 8px 8px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    box-sizing: border-box;
+    pointer-events: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jl-carousel-slide.jl-active-slide .jl-carousel-slide-caption {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.jl-carousel-slide-caption h4 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.jl-carousel-slide-caption p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+}
+
+.jl-carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(30, 32, 35, 0.75);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 0;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 20;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.jl-carousel-viewport:hover .jl-carousel-button {
+    background-color: #1e2023e6; /* Darken on viewport hover */
+}
+
+.jl-carousel-button:hover {
+    background-color: #323437; /* Darken on button hover */
+    transform: translateY(-50%) scale(1.05);
+}
+
+.jl-carousel-prev { left: 20px; }
+.jl-carousel-next { right: 20px; }
+
+.jl-carousel-dots {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.jl-carousel-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #B8BABD !important; /* Using !important to override potential script issues if any */
+    opacity: 1 !important;
+    border-radius: 50%;
+    margin: 0 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.jl-carousel-dot:hover {
+    background-color: #323437 !important;
+    opacity: 0.75 !important;
+    transform: scale(1.20);
+}
+
+.jl-carousel-dot.jl-active-dot {
+    background-color: #5764F1 !important;
+    opacity: 1 !important;
+    transform: scale(1.35);
+    box-shadow: 0 0 8px rgba(87, 100, 241, 0.5);
+}
+
+/* --- Shared Form Styles (Used on Home & Contact pages) --- */
+.contact-form {
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+/* Specific styling for contact form on the home page */
+#contact-home .contact-form {
+    margin-top: 20px;
+    background-color: #2E3035; /* Secondary Dark Background */
+    padding: 30px 40px;
+    border-radius: 8px;
+    border: 1px solid #1F2124; /* Darkest for border */
+}
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #B8BABD; /* Muted text */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #1F2124; /* Darkest for border */
+    background-color: #1F2124; /* Darkest for background */
+    border-radius: 3px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: #DADBDF; /* Primary Text */
+    transition: border-color 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #5764F1; /* "Blurple-ish" for focus */
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Form error message styles (dynamically added by JS) */
+.error-message {
+    color: #ff6b6b; /* Error red */
+    font-size: 0.85em;
+    display: block;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.form-group input.error-input,
+.form-group textarea.error-input {
+    border-color: #ff6b6b !important; /* Error red border */
+}
+
+.contact-form .btn { /* Submit button within forms */
+    display: block;
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px 25px;
+    text-transform: none;
+    font-weight: 500;
+}
+
+/* --- About Page Styles (about.html) --- */
+#about-section .container {
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+.about-content-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.about-image {
+    flex: 1 1 300px;
+    max-width: 330px;
+    margin: 0 auto 20px auto;
+}
+
+.about-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
+    display: block;
+}
+
+.about-bio { flex: 2 1 480px; }
+
+.about-bio h2 {
+    font-size: 1.8rem;
+    color: #FEFEFE; /* White */
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.about-bio p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #B8BABD; /* Muted text */
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.about-links {
+    margin-top: 25px;
+    margin-bottom: 25px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.contact-invitation {
+    font-size: 1.05rem;
+    color: #B8BABD; /* Muted text */
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #4E535B; /* Grey for separator */
+    text-align: left;
+}
+
+.contact-invitation .text-link {
+    color: #5764F1; /* "Blurple-ish" for links */
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.contact-invitation .text-link:hover { text-decoration: underline; }
+
+/* --- Contact Page Styles (contact.html) --- */
+#contact-section .container {
+    max-width: 700px; /* More focused content area */
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+.contact-intro {
+    text-align: center;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #B8BABD; /* Muted text */
+    margin-bottom: 30px;
+}
+
+.contact-intro .email-link {
+    color: #5764F1; /* "Blurple-ish" for email link */
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.contact-intro .email-link:hover { text-decoration: underline; }
+
+/* --- Work Page Styles (work.html) - MASONRY LIBRARY PREP --- */
+#work-gallery-section {
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+#work-gallery-section .section-intro-container { margin-bottom: 30px; }
+
+.gallery-intro {
+    text-align: center;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #B8BABD; /* Muted text */
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gallery-filters {
+    margin-bottom: 25px;
+    text-align: center;
+    padding: 10px 0;
+}
+
+.filter-btn {
+    background-color: transparent;
+    color: #BEC0C3; /* Muted Text */
+    padding: 8px 18px;
+    padding-bottom: 6px;
+    margin: 5px;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.filter-btn::after { /* Underline effect for filter buttons */
+    content: '';
+    position: absolute;
+    height: 2px;
+    bottom: 0;
+    background-color: #5764F1; /* "Blurple-ish" line */
+    width: 0;
+    left: 0;
+}
+
+.filter-btn:hover { color: #FEFEFE; } /* White on hover */
+.filter-btn.active:hover { color: #FEFEFE; } /* White on hover for active */
+
+.filter-btn:not(.active):hover::after {
+    animation: underlineSweep 0.6s ease-in-out;
+    bottom: -2px; /* Position underline slightly below text */
+}
+
+.filter-btn.active {
+    color: #5764F1; /* "Blurple-ish" for active filter */
+    font-weight: 600;
+    border-radius: 5px; /* Rounded active button */
+}
+
+.filter-btn.active::after {
+    width: 100%;
+    background-color: #5764F1; /* "Blurple-ish" for active line */
+    bottom: -2px; /* Position underline slightly below text */
+}
+
+.gallery-grid-container {
+    width: 92%;
+    max-width: 1800px; /* Wider max-width for gallery */
+    margin: 0 auto;
+}
+
+/* Styles for Masonry.js grid items */
+.work-page .gallery-grid {
+    position: relative;
+    /* Centering when isFitWidth: true is used in Masonry options */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.work-page .gallery-item {
+    width: 300px; /* Fixed width for items, adjust as desired for Masonry. */
+    margin-bottom: 10px; /* Vertical spacing */
+    overflow: hidden;
+    border-radius: 4px;
+    background-color: #2E3035; /* Secondary Dark Background for item bg */
+}
+
+.work-page .gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+    cursor: pointer; /* For lightbox */
+}
+
+/* Initial B&W effect for gallery images, colorized on view by JS */
+.work-page .gallery-item img.bw-image {
+    filter: grayscale(100%) contrast(1.1) brightness(0.9);
+    transition: filter 0.5s ease-in-out, transform 0.3s ease-out; /* Added transition */
+}
+
+.work-page .gallery-item img.has-come-into-view {
+    filter: grayscale(0%) contrast(1) brightness(1); /* Colorized */
+}
+
+.work-page .gallery-item:hover img { /* Hover effect for gallery images */
+    transform: scale(1.02);
+    filter: grayscale(0%) contrast(1) brightness(1.05); /* Ensure it's color on hover & slightly brighter */
+}
+
+
+#loading-indicator { /* Used by JS while gallery images load */
+    font-size: 1.1rem;
+    color: #71757C; /* Darker Grey Text */
+    text-align: center;
+    padding: 30px 0;
+}
+
+/* --- 5. Animations --- */
+@keyframes underlineSweep { /* Underline animation for nav links and filter buttons */
+    0% { width: 0%; left: 0%; }
+    50% { width: 100%; left: 0%; }
+    100% { width: 0%; left: 100%; }
+}
+
+/* --- 6. Media Queries / Responsive Styles --- */
+/* Adjustments for tablet and smaller screens */
+@media (max-width: 992px) {
+    /* .work-page .gallery-item { width: 280px; } Example: slightly smaller items */
+}
+
+@media (max-width: 768px) { /* Tablet portrait and larger phones */
+    .main-nav { flex-direction: column; align-items: center; padding-top: 8px; padding-bottom: 8px; }
+    .nav-logo { margin-bottom: 10px; }
+    .main-nav ul { padding-left: 0; justify-content: center; width: 100%; flex-wrap: wrap; }
+    .main-nav ul li { margin: 5px 10px; }
+    .page-section h2, .page-title { font-size: 2rem; }
+    .about-content-wrapper { flex-direction: column; align-items: center; }
+    .about-image { max-width: 280px; margin-bottom: 25px; }
+    .about-bio h2, .about-bio p, .contact-invitation { text-align: center; }
+    .about-links { justify-content: center; }
+    .gallery-grid-container { width: 95%; }
+
+    /* Carousel adjustments for smaller screens (1 slide visible) */
+    .jl-carousel-slide { flex: 0 0 100%; padding: 0 5px; transform: scale(1); opacity: 1; filter: grayscale(0%); }
+    .jl-carousel-slide.jl-active-slide,
+    .jl-carousel-slide.jl-prev-visible,
+    .jl-carousel-slide.jl-next-visible { transform: scale(1); opacity: 1; filter: grayscale(0%); }
+    .jl-carousel-slide img { max-height: 50vh; } /* Adjust image height */
+    .jl-carousel-viewport:hover .jl-carousel-button, .jl-carousel-button { background-color: rgba(30, 32, 35, 0.75); }
+    .jl-carousel-prev { left: 10px; }
+    .jl-carousel-next { right: 10px; }
+
+    .gallery-filters { padding: 5px 0; }
+    .filter-btn { padding: 7px 15px; margin: 3px; font-size: 0.85rem; }
+    /* Example: .work-page .gallery-item { width: 45%; } Aims for roughly 2 columns if desired */
+}
+
+@media (max-width: 480px) { /* Smaller mobile devices */
+    .main-header { padding: 10px 0; }
+    .main-nav { padding: 8px 20px; }
+    .main-nav ul li a { font-size: 0.9rem; }
+    .main-nav ul li { margin: 3px 8px; }
+    .page-section { padding: 25px 0; }
+    .page-section h2, .page-title { font-size: 1.8rem; margin-bottom: 20px; }
+    #enter-button { padding: 15px 50px; font-size: 18px; }
+    .social-icon { width: 45px; height: 45px; }
+    .social-icon img { width: 50%; height: 50%; }
+    #about-summary-home p, .contact-intro, .gallery-intro { font-size: 0.95rem; }
+    .jl-carousel-slide img { max-height: 45vh; } /* Further adjust image height */
+    .about-image { max-width: 220px; }
+    .about-bio h2 { font-size: 1.6rem; }
+    #contact-home .contact-form, #contact-section .container .contact-form { padding: 20px; } /* Reduce form padding */
+    .form-group input[type="text"], .form-group input[type="email"], .form-group textarea { padding: 10px; }
+    .contact-form .btn { font-size: 1rem; padding: 12px 20px; }
+    .filter-btn { padding: 6px 12px; margin: 2px; font-size: 0.8rem; }
+    /* Example for smaller screens: .work-page .gallery-item { width: 90%; } Aims for roughly 1 column */
+}
+
+
+/* --- Theatre View (Lightbox) Styles --- */
+/* These styles are for the image lightbox functionality controlled by script.js */
+.theatre-view {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Dark semi-transparent background */
+    display: none; /* Hidden by default, shown by JS */
+    justify-content: center; align-items: center;
+    z-index: 2000; /* High z-index to appear on top */
+    padding: 20px; box-sizing: border-box;
+    cursor: pointer; /* To indicate close on click outside image */
+}
+.theatre-view.active { display: flex; } /* Class added by JS to show lightbox */
+
+.theatre-view-content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: default; /* Default cursor for the image content area */
+}
+
+.theatre-view-content img {
+    display: block;
+    max-width: 95vw; /* Max width relative to viewport width */
+    max-height: 95vh; /* Max height relative to viewport height */
+    object-fit: contain; /* Ensure image fits without cropping */
+    border-radius: 5px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5); /* Shadow for depth */
+}
+
+.theatre-view-close {
+    position: absolute;
+    top: -10px; right: -10px; /* Position close button outside image top-right */
+    background-color: rgba(30, 30, 30, 0.9);
+    color: #fff;
+    border: none;
+    border-radius: 50%; /* Circular button */
+    width: 35px; height: 35px;
+    font-size: 20px; line-height: 35px; text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    z-index: 2001; /* Ensure close button is above image if overlapping */
+}
+.theatre-view-close:hover { background-color: rgba(50, 50, 50, 0.95); } /* Darken on hover */
+
+/* Prevent body scroll when lightbox is active */
+body.theatre-view-active { overflow: hidden; }
