@@ -125,7 +125,7 @@ body.scrollable-page {
     color: #FEFEFE;
 }
 
-/* RESTORED: Nav Link Animations */
+/* Nav Link Animations */
 .main-nav ul li a::after {
     content: '';
     position: absolute;
@@ -453,7 +453,7 @@ a.button-link, a.social-link { text-decoration: none; }
 .filter-btn:hover { color: #DADBDF; }
 .filter-btn.active { color: #5764F1; font-weight: 600; }
 
-/* RESTORED: Filter Button Animation */
+/* Filter Button Animation */
 .filter-btn::after {
     content: '';
     position: absolute;
@@ -471,11 +471,19 @@ a.button-link, a.social-link { text-decoration: none; }
 }
 
 .gallery-grid-container { width: 100%; max-width: 1800px; margin: 0 auto; }
-.gallery-grid { margin: 0 auto; }
 
+/* FIX: Clearfix added here to prevent collapse while floats are active */
+.gallery-grid { 
+    margin: 0 auto; 
+    width: 100%;
+    display: flow-root; /* Modern clearfix */
+}
+
+/* FIX: Float left added for immediate horizontal stacking */
 .grid-sizer, .gallery-item {
     width: 100%; 
     margin-bottom: 15px;
+    float: left; /* Essential for pre-JS layout */
 }
 .gallery-item {
     border-radius: 0;
