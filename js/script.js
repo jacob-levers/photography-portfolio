@@ -127,14 +127,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let msnry;
 
     if (galleryGrid) {
-        imagesLoaded(galleryGrid, function() {
-            msnry = new Masonry(galleryGrid, {
-                itemSelector: '.gallery-item',
-                columnWidth: '.grid-sizer',
-                percentPosition: true,
-                gutter: 15,
-                transitionDuration: 0
-            });
+        // FIX: Initialize Masonry IMMEDIATELY (Don't wait for images)
+        msnry = new Masonry(galleryGrid, {
+            itemSelector: '.gallery-item',
+            columnWidth: '.grid-sizer',
+            percentPosition: true,
+            gutter: 15,
+            transitionDuration: 0 // No animation on resize/load for speed
+        });
+
+        // FIX: Update layout as each image loads
+        imagesLoaded(galleryGrid).on('progress', function() {
             msnry.layout();
         });
 
