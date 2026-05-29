@@ -147,8 +147,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                filterButtons.forEach(b => b.classList.remove('active'));
+                filterButtons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
                 btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
                 const filterValue = btn.dataset.filter;
 
                 requestAnimationFrame(() => {
@@ -211,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         theatreView = document.createElement('div');
         theatreView.className = 'theatre-view';
         theatreView.id = 'jl-theatre-view';
-        theatreView.innerHTML = `<div class="theatre-view-content"><button class="theatre-view-close">&times;</button><img src="" alt="View"></div>`;
+        theatreView.innerHTML = `<div class="theatre-view-content"><button class="theatre-view-close" aria-label="Close">&times;</button><img src="" alt="View"></div>`;
         document.body.appendChild(theatreView);
         theatreImg = theatreView.querySelector('img');
         
