@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- 5. Section Reveal Animations (hero, about, contact) ---
     if (animate) {
         // Hero text on load
-        const heroEls = ['.hero-eyebrow', '.hero-title', '.hero-lead', '.hero-cta']
+        const heroEls = ['.hero-title', '.hero-lead', '.hero-cta']
             .map(sel => document.querySelector(sel)).filter(Boolean);
         if (heroEls.length) {
             gsap.from(heroEls, {
