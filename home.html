@@ -3,59 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Homepage of Jacob Levers, showcasing featured photography work and insights.">
-    <title>Home | Jacob Levers</title>
-    
+    <meta name="description" content="The photography portfolio of Jacob Levers — featured work, gallery, about, and contact.">
+    <title>Jacob Levers | Photography</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="scrollable-page">
+<body class="scrollable-page work-page">
     <header class="main-header">
         <nav class="main-nav">
-            <a href="home.html" class="nav-logo active">JACOB LEVERS</a>
+            <a href="#hero" class="nav-logo">JACOB LEVERS</a>
             <ul>
-                <li><a href="about.html">about</a></li>
-                <li><a href="work.html">work</a></li>
-                <li><a href="contact.html">contact</a></li>
+                <li><a href="#about">about</a></li>
+                <li><a href="#work">work</a></li>
+                <li><a href="#contact">contact</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <section id="about-summary-home" class="page-section" data-nav-theme="light">
+        <!-- ===== HERO ===== -->
+        <section id="hero" class="page-section hero-section">
             <div class="container">
-                <h2>hi, i'm jacob.</h2>
-                <p>I am passionate about capturing the unique beauty of diverse subjects - from landscapes to portraits - using the power of a single image to tell stories and evoke emotions.</p>
+                <h1 class="hero-title">hi, i'm jacob.</h1>
+                <p class="hero-lead">I capture the unique beauty of diverse subjects — from landscapes to portraits — using the power of a single image to tell stories and evoke emotions.</p>
+                <a href="#work" class="btn hero-cta">view my work</a>
+            </div>
+            <a href="#about" class="scroll-cue" aria-label="Scroll to about">
+                <span class="scroll-cue-arrow"></span>
+            </a>
+        </section>
+
+        <!-- ===== ABOUT ===== -->
+        <section id="about" class="page-section">
+            <div class="container">
+                <h2 class="section-heading">about me</h2>
+                <div class="about-content-wrapper">
+                    <div class="about-image">
+                        <img src="images/work/image34.webp" alt="Jacob Levers, photographer, with a skateboard">
+                    </div>
+                    <div class="about-bio">
+                        <h3>My Photographic Journey</h3>
+                        <p>
+                            Welcome! I'm Jacob Levers, a photographer driven by a deep passion for capturing the fleeting beauty of moments
+                            and the enduring power of memories. My journey into photography began with a simple desire to freeze time,
+                            to hold onto the expressions, landscapes, and stories that shape our lives.
+                        </p>
+                        <p>
+                            Whether it's the raw emotion of a portrait, the serene majesty of a landscape, or the candid energy of an event,
+                            I strive to create images that resonate and tell a compelling story. My camera is more than just a tool;
+                            it's my way of connecting with the world and sharing its diverse wonders from behind the lens.
+                        </p>
+                        <p>
+                            I believe that every click of the shutter is an opportunity to create something meaningful, something that
+                            can be cherished for years to come. My artistic philosophy centers on authenticity, creativity, and a
+                            relentless pursuit of that perfect shot that speaks volumes without uttering a single word.
+                        </p>
+                        <div class="about-links">
+                            <a href="https://www.linkedin.com/in/jacoblevers/" class="btn" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                            <a href="files/Jacob Levers Resume.pdf" class="btn" target="_blank" rel="noopener noreferrer">R&eacute;sum&eacute;</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
+        <!-- ===== FEATURED CAROUSEL ===== -->
         <section id="featured-photos-home" class="page-section" data-nav-theme="dark">
             <div class="container">
-                </div>
+            </div>
         </section>
 
-        <section id="contact-home" class="page-section" data-nav-theme="light">
+        <!-- ===== WORK GALLERY ===== -->
+        <section id="work" class="page-section">
             <div class="container">
-                <h2>drop me a line</h2>
+                <h2 class="section-heading">selected work</h2>
+                <div class="gallery-header-minimal">
+                    <div class="gallery-filters" role="group" aria-label="Filter gallery by category">
+                        <button class="filter-btn active" data-filter="all" aria-pressed="true">all</button>
+                        <button class="filter-btn" data-filter="portrait" aria-pressed="false">portrait</button>
+                        <button class="filter-btn" data-filter="vehicle" aria-pressed="false">vehicle</button>
+                        <button class="filter-btn" data-filter="animal" aria-pressed="false">animal</button>
+                        <button class="filter-btn" data-filter="polaroid" aria-pressed="false">polaroid</button>
+                        <button class="filter-btn" data-filter="other" aria-pressed="false">other</button>
+                    </div>
+                </div>
+
+                <div class="gallery-grid-container">
+                    <div class="gallery-grid">
+                        <div class="gallery-item gallery-item--wide gallery-item--tall" data-category="portrait"><img src="images/work/image0.webp" alt="Work" class="bw-image" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image1.webp" alt="Work" class="bw-image" decoding="async"></div>
+                        <div class="gallery-item gallery-item--tall" data-category="portrait"><img src="images/work/image2.webp" alt="Work" class="bw-image" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image3.webp" alt="Work" class="bw-image" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image4.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image5.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--tall" data-category="animal"><img src="images/work/image6.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image7.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image8.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image9.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image10.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image11.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--wide" data-category="portrait"><img src="images/work/image12.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image13.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="animal"><img src="images/work/image14.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="animal"><img src="images/work/image15.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="animal"><img src="images/work/image16.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--tall" data-category="other"><img src="images/work/image17.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image18.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image19.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image20.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image21.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="animal"><img src="images/work/image22.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image23.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--wide" data-category="portrait"><img src="images/work/image24.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image25.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image26.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image27.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="animal"><img src="images/work/image28.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image29.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--tall" data-category="portrait"><img src="images/work/image30.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image31.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image32.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="other"><img src="images/work/image33.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image34.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image35.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image36.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image37.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--wide" data-category="vehicle"><img src="images/work/image38.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="vehicle"><img src="images/work/image39.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="vehicle"><img src="images/work/image40.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="animal"><img src="images/work/image41.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="vehicle"><img src="images/work/image42.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="vehicle"><img src="images/work/image43.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--tall" data-category="vehicle"><img src="images/work/image44.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="vehicle"><img src="images/work/image45.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="vehicle"><img src="images/work/image46.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image47.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image48.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image49.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image50.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image51.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image52.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image53.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image54.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image55.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image56.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image57.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image58.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image59.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image60.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image61.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image62.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image63.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image64.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="polaroid"><img src="images/work/image65.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--tall" data-category="portrait"><img src="images/work/image66.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image67.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image68.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image69.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image70.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image71.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item gallery-item--wide" data-category="portrait"><img src="images/work/image72.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image73.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image74.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image75.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image76.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                        <div class="gallery-item" data-category="portrait"><img src="images/work/image77.webp" alt="Work" class="bw-image" loading="lazy" decoding="async"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CONTACT ===== -->
+        <section id="contact" class="page-section" data-nav-theme="light">
+            <div class="container">
+                <h2 class="section-heading">drop me a line</h2>
+                <p class="contact-intro">
+                    I'd love to hear from you. Fill out the form below, or email me directly at
+                    <a href="mailto:hello@jacoblevers.com" class="email-link">hello@jacoblevers.com</a>.
+                </p>
                 <form class="contact-form" action="https://formsubmit.co/hello@jacoblevers.com" method="POST">
                     <input type="hidden" name="_next" value="https://jacoblevers.com/thanks.html">
                     <input type="hidden" name="_captcha" value="false">
 
                     <div class="form-group">
-                        <label for="home-name">Name</label>
-                        <input type="text" id="home-name" name="name" required>
+                        <label for="contact-name">Name</label>
+                        <input type="text" id="contact-name" name="name" required>
                     </div>
                     <div class="form-group">
-                        <label for="home-email">Email</label>
-                        <input type="email" id="home-email" name="email" required>
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" name="email" required>
                     </div>
                     <div class="form-group">
-                        <label for="home-message">Message</label>
-                        <textarea id="home-message" name="message" rows="6" required></textarea>
+                        <label for="contact-message">Message</label>
+                        <textarea id="contact-message" name="message" rows="6" required></textarea>
                     </div>
                     <div class="form-group">
                         <button type="submit" class="btn">send message</button>
@@ -65,6 +210,14 @@
         </section>
     </main>
 
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="footer-year">2026</span> Jacob Levers. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
     <script src="js/script.js" defer></script>
 </body>
