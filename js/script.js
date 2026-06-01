@@ -48,18 +48,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const BG = '#2e313a';
         // Mostly muted grey strands, with occasional theme-coloured accents
         const palette = [
-            'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)',
-            'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)',
-            'rgba(135,142,156,0.06)',  'rgba(135,142,156,0.06)',
-            'rgba(87,100,241,0.10)',   // brand blue
-            'rgba(196,86,86,0.06)',    // faint red
-            'rgba(86,178,178,0.06)'    // faint teal
+            'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)',
+            'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)',
+            'rgba(135,142,156,0.045)', 'rgba(135,142,156,0.045)',
+            'rgba(87,100,241,0.075)',  // brand blue
+            'rgba(196,86,86,0.045)',   // faint red
+            'rgba(86,178,178,0.045)'   // faint teal
         ];
 
         const NOISE_SCALE = 0.0016;
         const FIELD_TURNS = 3.2;      // how much the noise rotates the flow
         const FIELD_DRIFT = 0.0022;   // how fast the whole field morphs over time
-        const FADE = 0.085;           // higher = trails clear faster, less clutter
+        const FADE = 0.16;            // higher = trails clear faster (wispier, never solid)
         let dpr, W, H, particles = [], rafId = null, running = false, time = 0;
 
         function makeParticle() {
@@ -67,10 +67,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 x: Math.random() * W,
                 y: Math.random() * H,
                 life: 0,
-                maxLife: 80 + Math.random() * 180,
+                maxLife: 60 + Math.random() * 140,
                 speed: 0.7 + Math.random() * 1.2,
                 color: palette[(Math.random() * palette.length) | 0],
-                width: 0.7 + Math.random() * 1.0
+                width: 0.7 + Math.random() * 0.9
             };
         }
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.fillStyle = BG;
             ctx.fillRect(0, 0, W, H);
-            const count = Math.min(640, Math.max(220, Math.floor(W * H / 2700)));
+            const count = Math.min(320, Math.max(120, Math.floor(W * H / 5400)));
             particles = Array.from({ length: count }, makeParticle);
         }
 
@@ -467,4 +467,43 @@ document.addEventListener('DOMContentLoaded', function () {
         window.addEventListener('scroll', toggleBackToTop, { passive: true });
         backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     }
+
+    // --- 10. Hero snap: frame the art, or commit to leaving as soon as you stop ---
+    (function heroSnap() {
+        if (reduceMotion) return;
+        const hero = document.getElementById('hero');
+        const about = document.getElementById('about');
+        if (!hero || !about) return;
+        const navOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-offset')) || 96;
+
+        let timer, prevY = window.scrollY, dir = 1, snapping = false;
+
+        function aboutTarget() {
+            return Math.round(about.getBoundingClientRect().top + window.scrollY - navOffset);
+        }
+
+        function onScrollEnd() {
+            if (snapping) return;
+            const y = window.scrollY;
+            const h = hero.offsetHeight;
+            if (y <= 1 || y >= h - 1) return;        // already at an end — leave it
+            // Small dead-zones at each edge; otherwise commit in the scroll direction
+            let target;
+            if (y < h * 0.06) target = 0;
+            else if (y > h * 0.94) target = aboutTarget();
+            else target = dir >= 0 ? aboutTarget() : 0;
+            snapping = true;
+            window.scrollTo({ top: target, behavior: 'smooth' });
+            setTimeout(() => { snapping = false; prevY = window.scrollY; }, 650);
+        }
+
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY;
+            if (y > prevY) dir = 1; else if (y < prevY) dir = -1;
+            prevY = y;
+            if (snapping) return;
+            clearTimeout(timer);
+            timer = setTimeout(onScrollEnd, 120);
+        }, { passive: true });
+    })();
 });

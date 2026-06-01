@@ -23,20 +23,6 @@
 html {
     scroll-behavior: smooth;
     height: 100%;
-    /* Gently frame the hero art: snaps to it when you settle near the top,
-       releases smoothly as soon as you scroll away (proximity, not mandatory) */
-    scroll-snap-type: y proximity;
-}
-/* Snap points only around the hero so the rest of the page scrolls freely */
-#hero {
-    scroll-snap-align: start;
-    scroll-margin-top: 0;
-}
-#about {
-    scroll-snap-align: start;
-}
-@media (prefers-reduced-motion: reduce) {
-    html { scroll-snap-type: none; }
 }
 
 body {
