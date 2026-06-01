@@ -12,6 +12,135 @@ document.addEventListener('DOMContentLoaded', function () {
         gsap.registerPlugin(ScrollTrigger);
     }
 
+    // --- 0. Hero flow-field background ---
+    // Particles drift along a Perlin-noise vector field, leaving faint
+    // trails that weave into strands. Tuned to the dark/blue theme.
+    (function heroFlowField() {
+        const canvas = document.getElementById('hero-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Compact classic Perlin noise (own implementation)
+        const perlin = (() => {
+            const perm = new Uint8Array(512);
+            const src = Array.from({ length: 256 }, (_, i) => i);
+            for (let i = 255; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const t = src[i]; src[i] = src[j]; src[j] = t;
+            }
+            for (let i = 0; i < 512; i++) perm[i] = src[i & 255];
+            const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+            const lerp = (a, b, t) => a + t * (b - a);
+            const grad = (h, x, y) => ((h & 1) ? -x : x) + ((h & 2) ? -y : y);
+            return (x, y) => {
+                const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+                x -= Math.floor(x); y -= Math.floor(y);
+                const u = fade(x), v = fade(y);
+                const aa = perm[perm[X] + Y], ab = perm[perm[X] + Y + 1];
+                const ba = perm[perm[X + 1] + Y], bb = perm[perm[X + 1] + Y + 1];
+                return lerp(lerp(grad(aa, x, y), grad(ba, x - 1, y), u),
+                            lerp(grad(ab, x, y - 1), grad(bb, x - 1, y - 1), u), v);
+            };
+        })();
+
+        const BG = '#2e313a';
+        // Mostly muted grey strands, with occasional theme-coloured accents
+        const palette = [
+            'rgba(150,156,168,0.055)', 'rgba(150,156,168,0.055)', 'rgba(150,156,168,0.055)',
+            'rgba(150,156,168,0.055)', 'rgba(150,156,168,0.055)', 'rgba(150,156,168,0.055)',
+            'rgba(135,142,156,0.05)',  'rgba(135,142,156,0.05)',
+            'rgba(87,100,241,0.085)',  // brand blue
+            'rgba(196,86,86,0.05)',    // faint red
+            'rgba(86,178,178,0.05)'    // faint teal
+        ];
+
+        const NOISE_SCALE = 0.0016;
+        const FIELD_TURNS = 3.2;     // how much the noise rotates the flow
+        let dpr, W, H, particles = [], rafId = null, running = false;
+
+        function makeParticle() {
+            return {
+                x: Math.random() * W,
+                y: Math.random() * H,
+                life: 0,
+                maxLife: 120 + Math.random() * 320,
+                speed: 0.6 + Math.random() * 1.1,
+                color: palette[(Math.random() * palette.length) | 0],
+                width: 0.7 + Math.random() * 1.0
+            };
+        }
+
+        function resize() {
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const rect = canvas.getBoundingClientRect();
+            W = rect.width; H = rect.height;
+            canvas.width = Math.round(W * dpr);
+            canvas.height = Math.round(H * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.fillStyle = BG;
+            ctx.fillRect(0, 0, W, H);
+            const count = Math.min(700, Math.max(220, Math.floor(W * H / 2600)));
+            particles = Array.from({ length: count }, makeParticle);
+        }
+
+        function step() {
+            // Gentle fade keeps strands building then slowly cycling
+            ctx.fillStyle = 'rgba(46,49,58,0.022)';
+            ctx.fillRect(0, 0, W, H);
+
+            for (const p of particles) {
+                const angle = perlin(p.x * NOISE_SCALE, p.y * NOISE_SCALE) * Math.PI * FIELD_TURNS;
+                const nx = p.x + Math.cos(angle) * p.speed;
+                const ny = p.y + Math.sin(angle) * p.speed;
+
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = p.width;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(nx, ny);
+                ctx.stroke();
+
+                p.x = nx; p.y = ny; p.life++;
+                if (p.life > p.maxLife || nx < -10 || nx > W + 10 || ny < -10 || ny > H + 10) {
+                    Object.assign(p, makeParticle());
+                }
+            }
+        }
+
+        function loop() {
+            if (!running) return;
+            step();
+            rafId = requestAnimationFrame(loop);
+        }
+        function start() { if (!running) { running = true; loop(); } }
+        function stop() { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = null; }
+
+        function warmUp(frames) { for (let i = 0; i < frames; i++) step(); }
+
+        resize();
+        let rt;
+        window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { resize(); warmUp(140); }, 200); });
+
+        if (reduceMotion) {
+            // Render a still woven frame, no motion
+            warmUp(260);
+            return;
+        }
+
+        // Pre-weave so the hero isn't blank on first paint, then animate
+        warmUp(140);
+
+        // Only animate while the hero is on screen (saves CPU on the long page)
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(entries => {
+                entries.forEach(e => e.isIntersecting ? start() : stop());
+            }, { threshold: 0 }).observe(canvas);
+        } else {
+            start();
+        }
+    })();
+
     // --- 1. Landing Page Slideshow (index.html) ---
     const landingSlideshow = document.getElementById('background-slideshow');
     if (landingSlideshow) {
