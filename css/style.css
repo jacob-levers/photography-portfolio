@@ -7,7 +7,7 @@
 :root {
     --accent: #5764F1;
     --accent-dark: #4651C3;
-    --bg-dark: #353840;
+    --bg-dark: #2e313a;
     --text-primary: #DADBDF;
     --text-muted: #B8BABD;
     --nav-offset: 96px;
@@ -29,7 +29,7 @@ body {
     font-family: "Inter", sans-serif;
     line-height: 1.6;
     color: #DADBDF; /* Primary Text */
-    background-color: #353840; /* Primary Dark Background */
+    background-color: #2e313a; /* Primary Dark Background — matches hero canvas */
     overflow-x: hidden;
     height: 100%;
     display: flex;
@@ -321,7 +321,7 @@ a.button-link, a.social-link { text-decoration: none; }
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: radial-gradient(ellipse 60% 55% at 50% 45%, rgba(53, 56, 64, 0.55) 0%, rgba(53, 56, 64, 0) 70%);
+    background: radial-gradient(ellipse 60% 55% at 50% 45%, rgba(46, 49, 58, 0.55) 0%, rgba(46, 49, 58, 0) 70%);
 }
 .hero-section .container {
     position: relative;

@@ -12,58 +12,66 @@ document.addEventListener('DOMContentLoaded', function () {
         gsap.registerPlugin(ScrollTrigger);
     }
 
-    // --- 0. Hero circuit-board background ---
-    // Routing agents travel on a grid, turning at right angles and dropping
-    // junction nodes / terminal pads — a PCB-trace look. Own implementation,
-    // tuned to the dark/blue theme.
-    (function heroCircuit() {
+    // --- 0. Hero flow-field background ---
+    // Particles drift along a Perlin-noise vector field, leaving faint trails
+    // that weave into strands. Trails fade fairly quickly so the space keeps
+    // clearing and new patterns form rather than filling up. Own implementation.
+    (function heroFlowField() {
         const canvas = document.getElementById('hero-canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const GRID = 28;            // trace grid pitch (px)
-        const TRACE = 'rgba(120,140,175,0.09)';
-        const TRACE_ACCENT = 'rgba(87,100,241,0.22)';
-        const NODE = 'rgba(150,165,195,0.32)';
-        const NODE_ACCENT = 'rgba(120,135,255,0.55)';
-        const DOT = 'rgba(120,132,156,0.05)';   // faint substrate grid dots
-
-        let dpr, W, H, traces = [], cols = 0, rows = 0, rafId = null, running = false;
-
-        function newLeg() { return (1 + (Math.random() * 5 | 0)) * GRID; }
-
-        function makeTrace() {
-            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-            const d = dirs[(Math.random() * 4) | 0];
-            const accent = Math.random() < 0.2;
-            return {
-                x: (Math.random() * cols | 0) * GRID,
-                y: (Math.random() * rows | 0) * GRID,
-                dx: d[0], dy: d[1],
-                legLeft: newLeg(),
-                segs: 0,
-                maxSegs: 6 + (Math.random() * 12 | 0),
-                speed: 0.9 + Math.random() * 1.4,
-                accent,
-                trace: accent ? TRACE_ACCENT : TRACE,
-                node: accent ? NODE_ACCENT : NODE,
-                w: accent ? 1.4 : 1
+        // Compact classic Perlin noise (own implementation)
+        const perlin = (() => {
+            const perm = new Uint8Array(512);
+            const src = Array.from({ length: 256 }, (_, i) => i);
+            for (let i = 255; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const t = src[i]; src[i] = src[j]; src[j] = t;
+            }
+            for (let i = 0; i < 512; i++) perm[i] = src[i & 255];
+            const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+            const lerp = (a, b, t) => a + t * (b - a);
+            const grad = (h, x, y) => ((h & 1) ? -x : x) + ((h & 2) ? -y : y);
+            return (x, y) => {
+                const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+                x -= Math.floor(x); y -= Math.floor(y);
+                const u = fade(x), v = fade(y);
+                const aa = perm[perm[X] + Y], ab = perm[perm[X] + Y + 1];
+                const ba = perm[perm[X + 1] + Y], bb = perm[perm[X + 1] + Y + 1];
+                return lerp(lerp(grad(aa, x, y), grad(ba, x - 1, y), u),
+                            lerp(grad(ab, x, y - 1), grad(bb, x - 1, y - 1), u), v);
             };
-        }
+        })();
 
-        function drawNode(x, y, color, r) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        const BG = '#2e313a';
+        // Mostly muted grey strands, with occasional theme-coloured accents
+        const palette = [
+            'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)',
+            'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)', 'rgba(150,156,168,0.07)',
+            'rgba(135,142,156,0.06)',  'rgba(135,142,156,0.06)',
+            'rgba(87,100,241,0.10)',   // brand blue
+            'rgba(196,86,86,0.06)',    // faint red
+            'rgba(86,178,178,0.06)'    // faint teal
+        ];
 
-        function drawGridDots() {
-            ctx.fillStyle = DOT;
-            for (let gx = 0; gx <= W; gx += GRID)
-                for (let gy = 0; gy <= H; gy += GRID)
-                    ctx.fillRect(gx - 0.5, gy - 0.5, 1, 1);
+        const NOISE_SCALE = 0.0016;
+        const FIELD_TURNS = 3.2;      // how much the noise rotates the flow
+        const FIELD_DRIFT = 0.0022;   // how fast the whole field morphs over time
+        const FADE = 0.085;           // higher = trails clear faster, less clutter
+        let dpr, W, H, particles = [], rafId = null, running = false, time = 0;
+
+        function makeParticle() {
+            return {
+                x: Math.random() * W,
+                y: Math.random() * H,
+                life: 0,
+                maxLife: 80 + Math.random() * 180,
+                speed: 0.7 + Math.random() * 1.2,
+                color: palette[(Math.random() * palette.length) | 0],
+                width: 0.7 + Math.random() * 1.0
+            };
         }
 
         function resize() {
@@ -73,54 +81,35 @@ document.addEventListener('DOMContentLoaded', function () {
             canvas.width = Math.round(W * dpr);
             canvas.height = Math.round(H * dpr);
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.lineCap = 'round';
-            ctx.fillStyle = '#2e313a';
+            ctx.fillStyle = BG;
             ctx.fillRect(0, 0, W, H);
-            cols = Math.floor(W / GRID);
-            rows = Math.floor(H / GRID);
-            const count = Math.min(160, Math.max(50, Math.floor(W * H / 9000)));
-            traces = Array.from({ length: count }, makeTrace);
+            const count = Math.min(640, Math.max(220, Math.floor(W * H / 2700)));
+            particles = Array.from({ length: count }, makeParticle);
         }
 
         function step() {
-            // Fade old traces so the board continuously re-routes
-            ctx.fillStyle = 'rgba(46,49,58,0.05)';
+            // Fade old trails so the field keeps clearing and re-forming
+            ctx.fillStyle = 'rgba(46,49,58,' + FADE + ')';
             ctx.fillRect(0, 0, W, H);
-            drawGridDots();
 
-            for (const t of traces) {
-                const px = t.x, py = t.y;
-                t.x += t.dx * t.speed;
-                t.y += t.dy * t.speed;
+            // The whole field slowly rotates over time so strands morph
+            time += FIELD_DRIFT;
 
-                ctx.strokeStyle = t.trace;
-                ctx.lineWidth = t.w;
+            for (const p of particles) {
+                const angle = perlin(p.x * NOISE_SCALE, p.y * NOISE_SCALE) * Math.PI * FIELD_TURNS + time;
+                const nx = p.x + Math.cos(angle) * p.speed;
+                const ny = p.y + Math.sin(angle) * p.speed;
+
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = p.width;
                 ctx.beginPath();
-                ctx.moveTo(px, py);
-                ctx.lineTo(t.x, t.y);
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(nx, ny);
                 ctx.stroke();
 
-                // Bright routing tip on accent traces
-                if (t.accent) drawNode(t.x, t.y, t.node, 1.3);
-
-                t.legLeft -= t.speed;
-                if (t.legLeft <= 0) {
-                    // Snap to grid, drop a junction node, decide a 90° turn
-                    t.x = Math.round(t.x / GRID) * GRID;
-                    t.y = Math.round(t.y / GRID) * GRID;
-                    drawNode(t.x, t.y, t.node, t.accent ? 2 : 1.5);
-                    t.segs++;
-                    if (Math.random() < 0.72) {
-                        if (t.dx !== 0) { t.dx = 0; t.dy = Math.random() < 0.5 ? 1 : -1; }
-                        else { t.dy = 0; t.dx = Math.random() < 0.5 ? 1 : -1; }
-                    }
-                    t.legLeft = newLeg();
-
-                    const off = t.x < -GRID || t.x > W + GRID || t.y < -GRID || t.y > H + GRID;
-                    if (t.segs > t.maxSegs || off) {
-                        drawNode(t.x, t.y, t.node, t.accent ? 3 : 2.2); // terminal pad
-                        Object.assign(t, makeTrace());
-                    }
+                p.x = nx; p.y = ny; p.life++;
+                if (p.life > p.maxLife || nx < -10 || nx > W + 10 || ny < -10 || ny > H + 10) {
+                    Object.assign(p, makeParticle());
                 }
             }
         }
@@ -132,11 +121,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         resize();
         let rt;
-        window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { resize(); warmUp(180); }, 200); });
+        window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { resize(); warmUp(90); }, 200); });
 
-        if (reduceMotion) { warmUp(260); return; }
+        if (reduceMotion) { warmUp(180); return; }
 
-        warmUp(180); // pre-route the board so the hero isn't blank on first paint
+        warmUp(90); // pre-weave a little so the hero isn't blank on first paint
 
         if ('IntersectionObserver' in window) {
             new IntersectionObserver(entries => {
