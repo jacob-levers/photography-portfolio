@@ -86,7 +86,11 @@ document.addEventListener('DOMContentLoaded', function () {
             on: {
                 click: function (swiper, event) {
                     const clickedImg = event.target.closest('img');
-                    if (clickedImg) window.openTheatreView(clickedImg.src);
+                    if (clickedImg) {
+                        const srcs = slidesData.map(s => s.src);
+                        const idx = srcs.indexOf(clickedImg.getAttribute('src')) ;
+                        window.openTheatreView(srcs, idx < 0 ? 0 : idx);
+                    }
                 }
             }
         });
@@ -162,10 +166,17 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Lightbox open on image click
+        // Lightbox open on image click — browse only the currently-visible photos
         galleryGrid.addEventListener('click', e => {
             const img = e.target.closest('.gallery-item img');
-            if (img) { e.preventDefault(); window.openTheatreView(img.src); }
+            if (!img) return;
+            e.preventDefault();
+            const visibleImgs = galleryItems
+                .filter(it => it.style.display !== 'none')
+                .map(it => it.querySelector('img'));
+            const srcs = visibleImgs.map(im => im.src);
+            const idx = visibleImgs.indexOf(img);
+            window.openTheatreView(srcs, idx < 0 ? 0 : idx);
         });
 
         window.addEventListener('resize', refreshScroll);
@@ -249,26 +260,71 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // --- 8. Theatre View (lightbox) ---
-    let theatreView, theatreImg;
+    // --- 8. Theatre View (lightbox with prev/next, counter, keyboard, swipe) ---
+    let theatreView, theatreImg, theatreCounter;
+    let lightboxList = [];
+    let lightboxIndex = 0;
+
     function createTheatreView() {
         if (document.getElementById('jl-theatre-view')) return;
         theatreView = document.createElement('div');
         theatreView.className = 'theatre-view';
         theatreView.id = 'jl-theatre-view';
-        theatreView.innerHTML = `<div class="theatre-view-content"><button class="theatre-view-close" aria-label="Close">&times;</button><img src="" alt="View"></div>`;
+        theatreView.innerHTML = `
+            <button class="theatre-view-close" aria-label="Close">&times;</button>
+            <button class="theatre-view-nav theatre-view-prev" aria-label="Previous">&#10094;</button>
+            <button class="theatre-view-nav theatre-view-next" aria-label="Next">&#10095;</button>
+            <div class="theatre-view-content"><img src="" alt="Gallery photo"></div>
+            <div class="theatre-view-counter"></div>`;
         document.body.appendChild(theatreView);
         theatreImg = theatreView.querySelector('img');
+        theatreCounter = theatreView.querySelector('.theatre-view-counter');
 
         theatreView.addEventListener('click', (e) => {
-            if (e.target === theatreView || e.target.closest('.theatre-view-close')) closeTheatreView();
+            if (e.target === theatreView || e.target.closest('.theatre-view-close')) { closeTheatreView(); return; }
+            if (e.target.closest('.theatre-view-prev')) stepLightbox(-1);
+            else if (e.target.closest('.theatre-view-next')) stepLightbox(1);
         });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTheatreView(); });
+
+        document.addEventListener('keydown', (e) => {
+            if (!theatreView.classList.contains('active')) return;
+            if (e.key === 'Escape') closeTheatreView();
+            else if (e.key === 'ArrowLeft') stepLightbox(-1);
+            else if (e.key === 'ArrowRight') stepLightbox(1);
+        });
+
+        // Swipe on touch devices
+        let touchX = null;
+        theatreView.addEventListener('touchstart', e => { touchX = e.changedTouches[0].clientX; }, { passive: true });
+        theatreView.addEventListener('touchend', e => {
+            if (touchX === null) return;
+            const dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 50) stepLightbox(dx < 0 ? 1 : -1);
+            touchX = null;
+        }, { passive: true });
     }
 
-    window.openTheatreView = function (src) {
+    function renderLightbox() {
+        if (!lightboxList.length) return;
+        theatreImg.src = lightboxList[lightboxIndex];
+        const multiple = lightboxList.length > 1;
+        theatreCounter.textContent = multiple ? `${lightboxIndex + 1} / ${lightboxList.length}` : '';
+        theatreView.querySelectorAll('.theatre-view-nav').forEach(b => b.style.display = multiple ? 'flex' : 'none');
+    }
+
+    function stepLightbox(dir) {
+        if (lightboxList.length < 2) return;
+        lightboxIndex = (lightboxIndex + dir + lightboxList.length) % lightboxList.length;
+        renderLightbox();
+    }
+
+    // openTheatreView(list, index) — list of image srcs and the start index.
+    // Back-compatible: a single src string also works.
+    window.openTheatreView = function (list, index) {
         if (!theatreView) createTheatreView();
-        theatreImg.src = src;
+        lightboxList = Array.isArray(list) ? list : [list];
+        lightboxIndex = index || 0;
+        renderLightbox();
         theatreView.classList.add('active');
         document.body.classList.add('theatre-view-active');
     };
@@ -277,5 +333,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (theatreView) theatreView.classList.remove('active');
         document.body.classList.remove('theatre-view-active');
         setTimeout(() => { if (theatreImg) theatreImg.src = ''; }, 300);
+    }
+
+    // --- 9. Back to Top ---
+    const backToTop = document.getElementById('back-to-top');
+    if (backToTop) {
+        const toggleBackToTop = () => backToTop.classList.toggle('visible', window.scrollY > 600);
+        toggleBackToTop();
+        window.addEventListener('scroll', toggleBackToTop, { passive: true });
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     }
 });

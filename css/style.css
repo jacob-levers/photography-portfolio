@@ -363,11 +363,54 @@ a.button-link, a.social-link { text-decoration: none; }
 
 /* --- Site Footer --- */
 .site-footer {
-    padding: 30px 0;
+    padding: 40px 0;
     text-align: center;
     border-top: 1px solid rgba(83, 88, 96, 0.4);
     color: #71757C;
     font-size: 0.85rem;
+}
+.footer-socials {
+    margin-bottom: 22px;
+    gap: 16px;
+}
+.footer-socials .social-icon {
+    width: 42px;
+    height: 42px;
+}
+
+/* --- Back to Top Button --- */
+#back-to-top {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: rgba(87, 100, 241, 0.9);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1500;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease, visibility 0.3s;
+}
+#back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+#back-to-top:hover {
+    background-color: var(--accent);
+    transform: translateY(-2px);
+}
+@media (max-width: 768px) {
+    #back-to-top { bottom: 18px; right: 18px; width: 44px; height: 44px; }
 }
 
 /* --- Home Page Styles (home.html) --- */
@@ -652,12 +695,57 @@ a.button-link, a.social-link { text-decoration: none; }
 }
 .theatre-view.active { opacity: 1; pointer-events: auto; }
 .theatre-view-content img {
-    max-width: 95vw; max-height: 95vh;
+    max-width: 92vw; max-height: 88vh;
     box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    border-radius: 2px;
 }
 .theatre-view-close {
     position: absolute; top: 20px; right: 30px;
     color: #fff; background: none; border: none; font-size: 40px; cursor: pointer;
+    line-height: 1; z-index: 2;
+}
+
+/* Lightbox prev/next navigation */
+.theatre-view-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(30, 32, 35, 0.65);
+    color: #fff;
+    font-size: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.25s ease;
+    z-index: 2;
+    user-select: none;
+}
+.theatre-view-nav:hover { background: var(--accent); }
+.theatre-view-prev { left: 24px; }
+.theatre-view-next { right: 24px; }
+
+.theatre-view-counter {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #DADBDF;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    background: rgba(30, 32, 35, 0.6);
+    padding: 5px 14px;
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+}
+
+@media (max-width: 768px) {
+    .theatre-view-nav { width: 44px; height: 44px; font-size: 22px; }
+    .theatre-view-prev { left: 10px; }
+    .theatre-view-next { right: 10px; }
+    .theatre-view-content img { max-width: 96vw; }
 }
 
 body.theatre-view-active { overflow: hidden; }

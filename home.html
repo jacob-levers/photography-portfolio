@@ -6,12 +6,28 @@
     <meta name="description" content="The photography portfolio of Jacob Levers — featured work, gallery, about, and contact.">
     <title>Jacob Levers | Photography</title>
 
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#353840">
+
+    <!-- Social sharing (Open Graph / Twitter) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Jacob Levers | Photography">
+    <meta property="og:description" content="The photography portfolio of Jacob Levers — featured work, gallery, and more.">
+    <meta property="og:url" content="https://jacoblevers.com/">
+    <meta property="og:image" content="https://jacoblevers.com/images/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Jacob Levers | Photography">
+    <meta name="twitter:description" content="The photography portfolio of Jacob Levers — featured work, gallery, and more.">
+    <meta name="twitter:image" content="https://jacoblevers.com/images/og-image.jpg">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body class="scrollable-page work-page">
     <header class="main-header">
@@ -212,13 +228,28 @@
 
     <footer class="site-footer">
         <div class="container">
+            <div class="social-icons-container footer-socials">
+                <a href="https://youtube.com" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                    <span class="social-icon"><img src="images/YouTube.svg" alt="YouTube"></span>
+                </a>
+                <a href="https://www.linkedin.com/in/jacoblevers/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                    <span class="social-icon"><img src="images/LinkedIn.svg" alt="LinkedIn"></span>
+                </a>
+                <a href="https://www.instagram.com/jacob.levers/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                    <span class="social-icon"><img src="images/Instagram.svg" alt="Instagram"></span>
+                </a>
+            </div>
             <p>&copy; <span id="footer-year">2026</span> Jacob Levers. All rights reserved.</p>
         </div>
     </footer>
 
+    <button id="back-to-top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 5l7 7-1.41 1.41L13 8.83V20h-2V8.83l-4.59 4.58L5 12z"/></svg>
+    </button>
+
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
-    <script src="js/script.js?v=2" defer></script>
+    <script src="js/script.js?v=3" defer></script>
 </body>
 </html>
