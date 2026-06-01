@@ -628,20 +628,10 @@ a.button-link, a.social-link { text-decoration: none; }
     filter: grayscale(0%) brightness(1.08);
 }
 
-/* Scroll-reveal entrance — only when motion is allowed, so the grid is
-   fully visible if JS fails or motion is reduced. IntersectionObserver
-   adds .is-revealed (robust with lazy, variable-height masonry). */
-@media (prefers-reduced-motion: no-preference) {
-    .gallery-item.reveal-init {
-        opacity: 0;
-        transform: translateY(26px);
-        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    .gallery-item.reveal-init.is-revealed {
-        opacity: 1;
-        transform: none;
-    }
-}
+/* Photos are always visible (no opacity gate — avoids any blank-screen
+   risk on anchor jumps). The signature reveal is purely the additive
+   grayscale -> colour transition above, which degrades safely to a
+   visible B&W image if the IntersectionObserver never fires. */
 
 /* --- Animations --- */
 @keyframes underlineSweep {

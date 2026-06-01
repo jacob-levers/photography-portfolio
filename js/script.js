@@ -106,15 +106,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const galleryItems = Array.from(galleryGrid.querySelectorAll('.gallery-item'));
         const filterButtons = document.querySelectorAll('.filter-btn');
 
-        const revealItem = item => {
-            item.classList.add('is-revealed');
-            item.querySelector('img')?.classList.add('has-come-into-view');
-        };
+        // Photos are visible at all times. The only scroll effect is the
+        // additive grayscale -> colour transition (adding .has-come-into-view
+        // on the <img>). If IO is unavailable, colour them all in immediately.
+        const revealItem = item => item.querySelector('img')?.classList.add('has-come-into-view');
 
-        // Reveal-on-scroll via IntersectionObserver — robust with lazy,
-        // variable-height masonry and anchor jumps (no cached positions).
         if (animate && 'IntersectionObserver' in window) {
-            galleryItems.forEach(item => item.classList.add('reveal-init'));
             const revealObserver = new IntersectionObserver((entries, obs) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -125,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
             galleryItems.forEach(item => revealObserver.observe(item));
         } else {
-            // No animation: everything visible and coloured in
             galleryItems.forEach(revealItem);
         }
 
