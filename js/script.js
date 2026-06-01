@@ -100,43 +100,48 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- 4. Work Gallery (CSS Grid + GSAP reveal + filtering) ---
+    // --- 4. Work Gallery (CSS columns + IntersectionObserver reveal + filtering) ---
     const galleryGrid = document.querySelector('.gallery-grid');
     if (galleryGrid) {
         const galleryItems = Array.from(galleryGrid.querySelectorAll('.gallery-item'));
         const filterButtons = document.querySelectorAll('.filter-btn');
 
-        // Reveal-on-scroll: stagger items into view and trigger grayscale->colour
-        if (animate) {
-            galleryItems.forEach(item => item.classList.add('gsap-reveal'));
-            gsap.set(galleryItems, { opacity: 0, y: 24, scale: 0.96 });
+        const revealItem = item => {
+            item.classList.add('is-revealed');
+            item.querySelector('img')?.classList.add('has-come-into-view');
+        };
 
-            ScrollTrigger.batch('.gallery-item', {
-                start: 'top 92%',
-                onEnter: batch => {
-                    gsap.to(batch, {
-                        opacity: 1, y: 0, scale: 1,
-                        duration: 0.6, ease: 'power2.out', stagger: 0.07,
-                        overwrite: true
-                    });
-                    batch.forEach(el => el.querySelector('img')?.classList.add('has-come-into-view'));
-                }
-            });
+        // Reveal-on-scroll via IntersectionObserver — robust with lazy,
+        // variable-height masonry and anchor jumps (no cached positions).
+        if (animate && 'IntersectionObserver' in window) {
+            galleryItems.forEach(item => item.classList.add('reveal-init'));
+            const revealObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        revealItem(entry.target);
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+            galleryItems.forEach(item => revealObserver.observe(item));
         } else {
-            // No animation: make sure everything is visible and coloured in
-            galleryItems.forEach(item => {
-                item.style.opacity = '1';
-                item.querySelector('img')?.classList.add('has-come-into-view');
-            });
+            // No animation: everything visible and coloured in
+            galleryItems.forEach(revealItem);
         }
 
-        // Debounced ScrollTrigger refresh helper
+        // Debounced ScrollTrigger refresh helper (for triggers below the grid)
         let refreshTimer;
         const refreshScroll = () => {
             if (!hasGSAP) return;
             clearTimeout(refreshTimer);
             refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
         };
+
+        // Columns grow as (uncropped, lazy) images load — recompute
+        // positions of the contact triggers that sit below the grid.
+        galleryGrid.querySelectorAll('img').forEach(img => {
+            if (!img.complete) img.addEventListener('load', refreshScroll, { once: true });
+        });
 
         // Filter logic
         filterButtons.forEach(btn => {
@@ -151,11 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const matches = filterValue === 'all' || item.dataset.category === filterValue;
                     if (matches) {
                         item.style.display = '';
-                        if (animate) {
-                            gsap.fromTo(item,
-                                { opacity: 0, scale: 0.92 },
-                                { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out', overwrite: true });
-                        }
+                        revealItem(item); // ensure shown items are visible + in colour
                     } else {
                         item.style.display = 'none';
                     }
