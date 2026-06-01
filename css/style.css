@@ -102,7 +102,7 @@ body.scrollable-page {
     width: 90%;
     max-width: 1100px;
     margin: 0 auto;
-    background-color: rgba(31, 33, 36, 0.78);
+    background-color: rgba(31, 33, 36, 0.55);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 999px;
