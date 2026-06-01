@@ -57,7 +57,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const NOISE_SCALE = 0.0016;
         const FIELD_TURNS = 3.2;     // how much the noise rotates the flow
-        let dpr, W, H, particles = [], rafId = null, running = false;
+        const FIELD_DRIFT = 0.0016;  // how fast the whole field morphs over time
+        let dpr, W, H, particles = [], rafId = null, running = false, time = 0;
 
         function makeParticle() {
             return {
@@ -85,12 +86,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function step() {
-            // Gentle fade keeps strands building then slowly cycling
-            ctx.fillStyle = 'rgba(46,49,58,0.022)';
+            // Fade old trails so the field continuously regenerates (feels alive)
+            ctx.fillStyle = 'rgba(46,49,58,0.045)';
             ctx.fillRect(0, 0, W, H);
 
+            // The whole field slowly rotates over time so strands morph
+            time += FIELD_DRIFT;
+
             for (const p of particles) {
-                const angle = perlin(p.x * NOISE_SCALE, p.y * NOISE_SCALE) * Math.PI * FIELD_TURNS;
+                const angle = perlin(p.x * NOISE_SCALE, p.y * NOISE_SCALE) * Math.PI * FIELD_TURNS + time;
                 const nx = p.x + Math.cos(angle) * p.speed;
                 const ny = p.y + Math.sin(angle) * p.speed;
 
