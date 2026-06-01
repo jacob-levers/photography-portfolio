@@ -46,14 +46,14 @@ document.addEventListener('DOMContentLoaded', function () {
         })();
 
         const BG = '#2e313a';
-        // Brand-blue strands, with a few lighter/deeper blue tones for depth
+        // Cool white / silver strands — clean and neutral, no colour cast
         const palette = [
-            'rgba(96,110,250,0.12)',   'rgba(96,110,250,0.12)',   // brand blue #5764F1
-            'rgba(96,110,250,0.12)',   'rgba(96,110,250,0.11)',
-            'rgba(130,142,255,0.12)',  'rgba(130,142,255,0.12)',  // lighter blue
-            'rgba(130,142,255,0.10)',
-            'rgba(74,86,205,0.10)',    'rgba(74,86,205,0.10)',    // deeper blue
-            'rgba(160,172,255,0.16)'   // bright highlight
+            'rgba(214,220,230,0.07)',  'rgba(214,220,230,0.07)',  // cool silver
+            'rgba(214,220,230,0.07)',  'rgba(214,220,230,0.065)',
+            'rgba(228,233,242,0.07)',  'rgba(228,233,242,0.07)',  // brighter cool white
+            'rgba(228,233,242,0.06)',
+            'rgba(190,198,212,0.06)',  'rgba(190,198,212,0.06)',  // dimmer silver
+            'rgba(240,244,252,0.10)'   // bright highlight
         ];
 
         const NOISE_SCALE = 0.0016;
