@@ -46,14 +46,14 @@ document.addEventListener('DOMContentLoaded', function () {
         })();
 
         const BG = '#2e313a';
-        // Mostly muted grey strands, with occasional theme-coloured accents
+        // Brand-blue strands, with a few lighter/deeper blue tones for depth
         const palette = [
-            'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)',
-            'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)', 'rgba(150,156,168,0.05)',
-            'rgba(135,142,156,0.045)', 'rgba(135,142,156,0.045)',
-            'rgba(87,100,241,0.075)',  // brand blue
-            'rgba(196,86,86,0.045)',   // faint red
-            'rgba(86,178,178,0.045)'   // faint teal
+            'rgba(96,110,250,0.12)',   'rgba(96,110,250,0.12)',   // brand blue #5764F1
+            'rgba(96,110,250,0.12)',   'rgba(96,110,250,0.11)',
+            'rgba(130,142,255,0.12)',  'rgba(130,142,255,0.12)',  // lighter blue
+            'rgba(130,142,255,0.10)',
+            'rgba(74,86,205,0.10)',    'rgba(74,86,205,0.10)',    // deeper blue
+            'rgba(160,172,255,0.16)'   // bright highlight
         ];
 
         const NOISE_SCALE = 0.0016;
