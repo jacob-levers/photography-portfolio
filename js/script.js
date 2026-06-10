@@ -325,7 +325,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!img.complete) img.addEventListener('load', refreshScroll, { once: true });
         });
 
-        // Filter logic
+        // Filter logic — Flip glides items to their new positions; falls
+        // back to the instant toggle without Flip or with reduced motion
+        const applyFilter = filterValue => {
+            galleryItems.forEach(item => {
+                const matches = filterValue === 'all' || item.dataset.category === filterValue;
+                item.style.display = matches ? '' : 'none';
+                if (matches) revealItem(item); // shown items visible + in colour
+            });
+        };
+
         filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 filterButtons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
@@ -334,21 +343,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const filterValue = btn.dataset.filter;
 
-                galleryItems.forEach(item => {
-                    const matches = filterValue === 'all' || item.dataset.category === filterValue;
-                    if (matches) {
-                        item.style.display = '';
-                        revealItem(item); // ensure shown items are visible + in colour
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
+                if (!(animate && hasFlip)) {
+                    applyFilter(filterValue);
+                    refreshScroll();
+                    return;
+                }
 
-                refreshScroll();
+                try {
+                    Flip.killFlipsOf(galleryItems);
+                    const oldH = galleryGrid.offsetHeight;
+                    const state = Flip.getState(galleryItems);
+                    applyFilter(filterValue);
+                    const newH = galleryGrid.offsetHeight;
+                    // absolute:true pulls items out of column flow during the
+                    // animation — tween the grid's height so the page below
+                    // doesn't collapse and jump
+                    gsap.fromTo(galleryGrid, { height: oldH }, {
+                        height: newH, duration: 0.55, ease: 'power2.inOut', clearProps: 'height'
+                    });
+                    Flip.from(state, {
+                        duration: 0.55, ease: 'power2.inOut', absolute: true, scale: true,
+                        stagger: { amount: 0.15 },
+                        onEnter: els => gsap.fromTo(els, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' }),
+                        onLeave: els => gsap.to(els, { opacity: 0, scale: 0.92, duration: 0.3, ease: 'power2.in' }),
+                        onComplete: refreshScroll
+                    });
+                } catch (err) {
+                    applyFilter(filterValue);
+                    refreshScroll();
+                }
             });
         });
 
-        // Lightbox open on image click — browse only the currently-visible photos
+        // Lightbox open on image click — browse only the currently-visible
+        // photos; the clicked image is the zoom origin
         galleryGrid.addEventListener('click', e => {
             const img = e.target.closest('.gallery-item img');
             if (!img) return;
@@ -358,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .map(it => it.querySelector('img'));
             const srcs = visibleImgs.map(im => im.src);
             const idx = visibleImgs.indexOf(img);
-            window.openTheatreView(srcs, idx < 0 ? 0 : idx);
+            window.openTheatreView(srcs, idx < 0 ? 0 : idx, img);
         });
 
         window.addEventListener('resize', refreshScroll);
