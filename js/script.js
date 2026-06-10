@@ -70,6 +70,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const FADE = 0.16;            // higher = trails clear faster (wispier, never solid)
         let dpr, W, H, particles = [], rafId = null, running = false, time = 0;
 
+        // Cursor gently bends nearby strands (desktop pointers only)
+        const pointer = { cx: -1e4, cy: -1e4, x: -1e4, y: -1e4 };
+        const INFLUENCE = 120, INF2 = INFLUENCE * INFLUENCE, FORCE = 1.5;
+        const heroEl = canvas.closest('#hero');
+        if (heroEl && fineHover && !reduceMotion) {
+            heroEl.addEventListener('pointermove', e => { pointer.cx = e.clientX; pointer.cy = e.clientY; }, { passive: true });
+            heroEl.addEventListener('pointerleave', () => { pointer.cx = pointer.cy = -1e4; });
+        }
+
         function makeParticle() {
             return {
                 x: Math.random() * W,
@@ -103,10 +112,28 @@ document.addEventListener('DOMContentLoaded', function () {
             // The whole field slowly rotates over time so strands morph
             time += FIELD_DRIFT;
 
+            // Resolve the cursor into canvas space once per frame
+            if (pointer.cx > -1e3) {
+                const rect = canvas.getBoundingClientRect();
+                pointer.x = pointer.cx - rect.left;
+                pointer.y = pointer.cy - rect.top;
+            } else {
+                pointer.x = -1e4;
+            }
+
             for (const p of particles) {
                 const angle = perlin(p.x * NOISE_SCALE, p.y * NOISE_SCALE) * Math.PI * FIELD_TURNS + time;
-                const nx = p.x + Math.cos(angle) * p.speed;
-                const ny = p.y + Math.sin(angle) * p.speed;
+                let nx = p.x + Math.cos(angle) * p.speed;
+                let ny = p.y + Math.sin(angle) * p.speed;
+
+                // Soft radial push bends strands around the cursor
+                const pdx = nx - pointer.x, pdy = ny - pointer.y;
+                const d2 = pdx * pdx + pdy * pdy;
+                if (d2 < INF2 && d2 > 0.01) {
+                    const d = Math.sqrt(d2), f = 1 - d / INFLUENCE;
+                    nx += (pdx / d) * f * f * FORCE;
+                    ny += (pdy / d) * f * f * FORCE;
+                }
 
                 ctx.strokeStyle = p.color;
                 ctx.lineWidth = p.width;
@@ -144,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     })();
 
-    // --- 1. Landing Page Slideshow (index.html) ---
+    // --- 1. Landing Page Slideshow + exit transition (index.html) ---
     const landingSlideshow = document.getElementById('background-slideshow');
     if (landingSlideshow) {
         const slides = landingSlideshow.querySelectorAll('.slide');
@@ -157,6 +184,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 slides[currentSlide].classList.add('active');
             }, 7000);
         }
+
+        // ENTER plays a quick veil-out, then navigates (cancel-safe via bfcache guard)
+        const enterLink = document.querySelector('.landing-page .button-link');
+        if (enterLink && !reduceMotion) {
+            enterLink.addEventListener('click', e => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                document.body.classList.add('is-exiting');
+                setTimeout(() => { window.location.href = enterLink.href; }, 420);
+            });
+        }
+        window.addEventListener('pageshow', e => {
+            if (e.persisted) document.body.classList.remove('is-exiting');
+        });
     }
 
     // --- 2. Footer Year ---
@@ -315,14 +356,62 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- 5. Section Reveal Animations (hero, about, contact) ---
+    // Wraps each word, then each character, in spans so the title can
+    // stagger in. Built only when animating — otherwise plain visible text.
+    function splitChars(el) {
+        const text = el.textContent;
+        el.setAttribute('aria-label', text);
+        el.textContent = '';
+        const frag = document.createDocumentFragment();
+        text.split(/(\s+)/).forEach(part => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+            const word = document.createElement('span');
+            word.className = 'ht-word';
+            word.setAttribute('aria-hidden', 'true');
+            for (const ch of part) {
+                const c = document.createElement('span');
+                c.className = 'ht-char';
+                c.textContent = ch;
+                word.appendChild(c);
+            }
+            frag.appendChild(word);
+        });
+        el.appendChild(frag);
+        return el.querySelectorAll('.ht-char');
+    }
+
     if (animate) {
-        // Hero text on load
-        const heroEls = ['.hero-title', '.hero-lead', '.hero-cta']
-            .map(sel => document.querySelector(sel)).filter(Boolean);
-        if (heroEls.length) {
-            gsap.from(heroEls, {
-                opacity: 0, y: 30, duration: 0.9, ease: 'power3.out', stagger: 0.12, delay: 0.1
+        // Hero: char-staggered title, then lead + CTA rise
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+            const chars = splitChars(heroTitle);
+            gsap.from(chars, {
+                yPercent: 110, opacity: 0, rotateX: -55,
+                transformPerspective: 500, transformOrigin: '50% 100%',
+                duration: 0.9, ease: 'power4.out', stagger: 0.035, delay: 0.15,
+                onComplete() { gsap.set(chars, { clearProps: 'all' }); }
             });
+        }
+        const heroSubEls = ['.hero-lead', '.hero-cta']
+            .map(sel => document.querySelector(sel)).filter(Boolean);
+        if (heroSubEls.length) {
+            gsap.from(heroSubEls, {
+                opacity: 0, y: 30, duration: 0.9, ease: 'power3.out', stagger: 0.12, delay: 0.55
+            });
+        }
+
+        // Hero content drifts a few px toward the cursor (desktop only)
+        const heroSection = document.getElementById('hero');
+        const heroBox = document.querySelector('.hero-section .container');
+        if (heroSection && heroBox && fineHover) {
+            const px = gsap.quickTo(heroBox, 'x', { duration: 0.8, ease: 'power3' });
+            const py = gsap.quickTo(heroBox, 'y', { duration: 0.8, ease: 'power3' });
+            heroSection.addEventListener('pointermove', e => {
+                px((e.clientX / window.innerWidth - 0.5) * 10);
+                py((e.clientY / window.innerHeight - 0.5) * 6);
+            }, { passive: true });
+            heroSection.addEventListener('pointerleave', () => { px(0); py(0); });
         }
 
         // About: parallax on the profile image + fade-up bio
@@ -574,4 +663,16 @@ document.addEventListener('DOMContentLoaded', function () {
             timer = setTimeout(onScrollEnd, 120);
         }, { passive: true });
     })();
+
+    // --- 11. Page entry veil (home) ---
+    // Only created when GSAP will definitely remove it; ties the splash's
+    // exit veil into a seamless dark handoff while the hero staggers in.
+    if (animate && document.getElementById('hero')) {
+        const veil = document.createElement('div');
+        veil.className = 'page-veil';
+        document.body.appendChild(veil);
+        const removeVeil = () => { if (veil.parentNode) veil.remove(); };
+        gsap.to(veil, { opacity: 0, duration: 0.55, ease: 'power1.out', delay: 0.05, onComplete: removeVeil });
+        setTimeout(removeVeil, 1500); // failsafe
+    }
 });

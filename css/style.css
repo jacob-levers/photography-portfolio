@@ -249,6 +249,8 @@ html {
 /* --- General Button Style --- */
 .btn {
     display: inline-block;
+    position: relative;
+    overflow: hidden;
     padding: 12px 25px;
     background-color: #5764F1;
     color: #FEFEFE;
@@ -263,6 +265,21 @@ html {
     text-shadow: none;
     transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Sheen sweep on hover (::after is reserved for the about arrow) */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 55%; height: 100%;
+    background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+    transform: translateX(-160%) skewX(-20deg);
+    pointer-events: none;
+}
+.btn:hover::before {
+    transform: translateX(290%) skewX(-20deg);
+    transition: transform 0.7s var(--ease-out);
 }
 
 .btn:hover,
@@ -281,6 +298,7 @@ html {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     z-index: -1;
+    overflow: hidden;
 }
 
 .slide {
@@ -291,9 +309,54 @@ html {
     background-repeat: no-repeat;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
+    /* Ken Burns drift: paused by default; .active resumes it, so an outgoing
+       slide freezes mid-zoom while the crossfade runs (no snap-back) */
+    animation: kenBurnsA 26s ease-in-out infinite alternate;
+    animation-play-state: paused;
+    will-change: transform;
+}
+.slide:nth-child(even) { animation-name: kenBurnsB; }
+.slide.active { opacity: 1; animation-play-state: running; }
+
+@keyframes kenBurnsA {
+    from { transform: scale(1); }
+    to   { transform: scale(1.1) translate(-1.5%, 1%); }
+}
+@keyframes kenBurnsB {
+    from { transform: scale(1.08) translate(1%, -1%); }
+    to   { transform: scale(1); }
 }
 
-.slide.active { opacity: 1; }
+/* Staggered entrance for the splash controls (self-completing — safe without JS) */
+@keyframes riseIn {
+    from { opacity: 0; transform: translateY(18px); }
+}
+.landing-page #enter-button { animation: riseIn 0.7s var(--ease-out) 0.15s backwards; }
+.landing-page .social-icons-container a:nth-child(1) .social-icon { animation: riseIn 0.6s var(--ease-out) 0.35s backwards; }
+.landing-page .social-icons-container a:nth-child(2) .social-icon { animation: riseIn 0.6s var(--ease-out) 0.45s backwards; }
+.landing-page .social-icons-container a:nth-child(3) .social-icon { animation: riseIn 0.6s var(--ease-out) 0.55s backwards; }
+
+/* Exit transition: content recedes while a veil in the home page's
+   background colour covers the screen — seamless handoff to home.html */
+.landing-page.is-exiting #content-wrapper {
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 0.4s ease, transform 0.4s var(--ease-out);
+}
+.landing-page.is-exiting::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--bg-dark);
+    animation: veilIn 0.42s var(--ease-in-out) forwards;
+}
+@keyframes veilIn { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    /* The global reduce rule would freeze slides at the zoomed end-frame */
+    .slide { animation: none !important; }
+}
 
 #content-wrapper {
     position: relative;
@@ -316,7 +379,7 @@ a.button-link, a.social-link { text-decoration: none; }
     border: 1px solid #5764f166;
     color: white;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.35s ease;
     text-shadow: 0px 0px 8px rgba(87, 100, 241, 0.5);
     padding: 18px 70px;
     font-size: 20px;
@@ -330,6 +393,7 @@ a.button-link, a.social-link { text-decoration: none; }
 #enter-button:hover {
     background-color: rgba(87, 100, 241, 0.4);
     transform: scale(1.03);
+    box-shadow: 0 0 32px 2px rgba(87, 100, 241, 0.45);
 }
 
 .social-icons-container {
@@ -417,6 +481,19 @@ a.button-link, a.social-link { text-decoration: none; }
     line-height: 1.05;
     margin-bottom: 22px;
     letter-spacing: -1.5px;
+}
+/* Char-split title spans (built by JS for the staggered reveal).
+   No overflow clipping — descenders and punctuation must stay visible. */
+.ht-word { display: inline-block; white-space: nowrap; }
+.ht-char { display: inline-block; }
+
+/* Page entry veil (created and removed by JS only when animating) */
+.page-veil {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-dark);
+    z-index: 3000;
+    pointer-events: none;
 }
 .hero-lead {
     font-size: 1.15rem;
