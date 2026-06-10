@@ -7,10 +7,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const hasGSAP = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const animate = hasGSAP && !reduceMotion;
+    const hasFlip = hasGSAP && typeof Flip !== 'undefined';
+    const fineHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
     if (hasGSAP) {
         gsap.registerPlugin(ScrollTrigger);
+        if (hasFlip) gsap.registerPlugin(Flip);
     }
+    // CSS hooks that depend on JS-driven animation hide/reveal scope under this class
+    if (animate) document.body.classList.add('js-anim');
+
+    console.log('%c📷 jacoblevers.com', 'color:#5764F1;font-size:14px;font-weight:700;',
+        "\nLike the animations? Say hi → hello@jacoblevers.com");
 
     // --- 0. Hero flow-field background ---
     // Particles drift along a Perlin-noise vector field, leaving faint trails

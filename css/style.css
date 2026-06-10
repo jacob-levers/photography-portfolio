@@ -11,6 +11,13 @@
     --text-primary: #DADBDF;
     --text-muted: #B8BABD;
     --nav-offset: 96px;
+    /* Motion tokens — every new transition uses these for a cohesive feel */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur-fast: 0.18s;
+    --dur-med: 0.35s;
+    --dur-slow: 0.7s;
 }
 
 /* --- 1. Global Resets & Base Styles --- */
@@ -38,6 +45,38 @@ body {
 
 body.scrollable-page {
     height: auto;
+}
+
+/* --- 1b. Global Polish --- */
+html {
+    /* Reserve the scrollbar gutter so locking scroll (lightbox) never shifts the page */
+    scrollbar-gutter: stable;
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #4E535B transparent;
+}
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb {
+    background-color: #4E535B;
+    border-radius: 8px;
+    border: 2px solid var(--bg-dark);
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--accent); }
+
+::selection { background: var(--accent); color: #FEFEFE; }
+
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.gallery-item img,
+.swiper-slide img,
+.theatre-view img {
+    -webkit-user-drag: none;
+    user-select: none;
 }
 
 /* --- 2. Layout & Utility Classes --- */
