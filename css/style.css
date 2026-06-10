@@ -296,6 +296,11 @@ html {
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     outline: none;
 }
+/* Keyboard focus must stay visible despite the :focus outline reset above */
+.btn:focus-visible {
+    outline: 2px solid #FEFEFE;
+    outline-offset: 3px;
+}
 
 /* --- 4. Page-Specific Styles --- */
 
