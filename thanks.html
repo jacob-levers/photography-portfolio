@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Message sent — thank you!">
     <title>Thank You | Jacob Levers</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <meta name="theme-color" content="#2e313a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=13">
-    <style>
-        body { text-align: center; padding: 150px; }
-        h1 { font-size: 2.2rem; color: #FEFEFE; margin-bottom: 20px; }
-        p { font-size: 1.1rem; color: #B8BABD; }
-        a { color: #5764F1; text-decoration: none; font-weight: 500;}
-    </style>
 </head>
-<body class="scrollable-page">
-    <main>
-        <h1>Thank You!</h1>
-        <p>Your message has been sent successfully. I'll get back to you shortly.</p>
-        <p><a href="index.html">Return to the homepage</a></p>
+<body class="scrollable-page thanks-page">
+    <main class="thanks-main">
+        <div class="thanks-card">
+            <svg class="thanks-check" viewBox="0 0 52 52" aria-hidden="true">
+                <circle class="tc-circle" cx="26" cy="26" r="24"/>
+                <path class="tc-tick" d="M14 27l8 8 16-16"/>
+            </svg>
+            <h1>thank you!</h1>
+            <p>Your message is on its way &mdash; I'll get back to you shortly.</p>
+            <a href="home.html" class="btn">back to the site</a>
+        </div>
     </main>
 </body>
 </html>

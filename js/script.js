@@ -589,8 +589,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // --- 8. Theatre View (lightbox with prev/next, counter, keyboard, swipe) ---
-    let theatreView, theatreImg, theatreCounter;
+    // --- 8. Theatre View (lightbox: zoom-from-thumbnail, directional steps,
+    //         counter tick, keyboard, swipe) ---
+    let theatreView, theatreContent, theatreImg, theatreCounter;
     let lightboxList = [];
     let lightboxIndex = 0;
 
@@ -606,7 +607,8 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="theatre-view-content"><img src="" alt="Gallery photo"></div>
             <div class="theatre-view-counter"></div>`;
         document.body.appendChild(theatreView);
-        theatreImg = theatreView.querySelector('img');
+        theatreContent = theatreView.querySelector('.theatre-view-content');
+        theatreImg = theatreContent.querySelector('img');
         theatreCounter = theatreView.querySelector('.theatre-view-counter');
 
         theatreView.addEventListener('click', (e) => {
@@ -622,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (e.key === 'ArrowRight') stepLightbox(1);
         });
 
-        // Swipe on touch devices
+        // Swipe on touch devices (inherits the directional slide)
         let touchX = null;
         theatreView.addEventListener('touchstart', e => { touchX = e.changedTouches[0].clientX; }, { passive: true });
         theatreView.addEventListener('touchend', e => {
@@ -633,35 +635,120 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: true });
     }
 
-    function renderLightbox() {
-        if (!lightboxList.length) return;
-        theatreImg.src = lightboxList[lightboxIndex];
+    function updateCounterAndNav(dir) {
         const multiple = lightboxList.length > 1;
         theatreCounter.textContent = multiple ? `${lightboxIndex + 1} / ${lightboxList.length}` : '';
         theatreView.querySelectorAll('.theatre-view-nav').forEach(b => b.style.display = multiple ? 'flex' : 'none');
+        if (animate && dir) {
+            gsap.fromTo(theatreCounter, { y: 6 * dir, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });
+        }
+    }
+
+    function preloadNeighbours() {
+        const n = lightboxList.length;
+        if (n < 2) return;
+        [lightboxIndex + 1, lightboxIndex - 1].forEach(k => {
+            const im = new Image();
+            im.src = lightboxList[(k % n + n) % n];
+        });
+    }
+
+    function setImage(src, dir) {
+        if (animate && dir) {
+            // Directional crossfade: old image slides out, new slides in
+            gsap.killTweensOf(theatreContent.querySelectorAll('img'));
+            theatreContent.querySelectorAll('img').forEach(im => { if (im !== theatreImg) im.remove(); });
+            const old = theatreImg;
+            const next = old.cloneNode();
+            next.src = src;
+            gsap.set(next, { opacity: 0, x: 44 * dir });
+            theatreContent.appendChild(next);
+            theatreImg = next;
+            gsap.set(old, { position: 'absolute' }); // new img takes the flex slot
+            gsap.to(old, { opacity: 0, x: -44 * dir, duration: 0.28, ease: 'power2.in', onComplete: () => old.remove() });
+            gsap.to(next, { opacity: 1, x: 0, duration: 0.42, ease: 'power3.out' });
+        } else {
+            theatreImg.src = src;
+        }
+        updateCounterAndNav(dir);
+        preloadNeighbours();
     }
 
     function stepLightbox(dir) {
         if (lightboxList.length < 2) return;
         lightboxIndex = (lightboxIndex + dir + lightboxList.length) % lightboxList.length;
-        renderLightbox();
+        setImage(lightboxList[lightboxIndex], dir);
     }
 
-    // openTheatreView(list, index) — list of image srcs and the start index.
-    // Back-compatible: a single src string also works.
-    window.openTheatreView = function (list, index) {
+    // Zoom-from-thumbnail: a fixed clone flies from the clicked photo's rect
+    // to the final centred rect, colourising mid-flight, then hands over to
+    // the real lightbox image underneath.
+    function zoomOpen(originImg) {
+        const rect = originImg.getBoundingClientRect(); // capture before scroll lock
+        theatreView.classList.add('active', 'is-zooming');
+        document.body.classList.add('theatre-view-active');
+        const natW = originImg.naturalWidth || rect.width;
+        const natH = originImg.naturalHeight || rect.height;
+        const s = Math.min(window.innerWidth * 0.92 / natW, window.innerHeight * 0.88 / natH);
+        const dw = natW * s, dh = natH * s;
+        const dx = (window.innerWidth - dw) / 2, dy = (window.innerHeight - dh) / 2;
+        const clone = originImg.cloneNode();
+        clone.className = 'theatre-zoom-clone';
+        gsap.set(clone, {
+            position: 'fixed', left: dx, top: dy, width: dw, height: dh, zIndex: 2100,
+            margin: 0, borderRadius: 4,
+            x: rect.left - dx, y: rect.top - dy,
+            scaleX: rect.width / dw, scaleY: rect.height / dh,
+            transformOrigin: '0 0',
+            filter: getComputedStyle(originImg).filter
+        });
+        document.body.appendChild(clone);
+        gsap.to(clone, {
+            x: 0, y: 0, scaleX: 1, scaleY: 1, borderRadius: 2, filter: 'grayscale(0%)',
+            duration: 0.5, ease: 'power3.inOut',
+            onComplete() {
+                theatreView.classList.remove('is-zooming');
+                clone.remove();
+            }
+        });
+        // Failsafe: never leave the chrome hidden or the clone stranded
+        setTimeout(() => {
+            theatreView.classList.remove('is-zooming');
+            if (clone.parentNode) clone.remove();
+        }, 1200);
+    }
+
+    // openTheatreView(list, index, originEl?) — srcs, start index, and an
+    // optional thumbnail element to zoom from. A single src string also works.
+    window.openTheatreView = function (list, index, originEl) {
         if (!theatreView) createTheatreView();
         lightboxList = Array.isArray(list) ? list : [list];
         lightboxIndex = index || 0;
-        renderLightbox();
-        theatreView.classList.add('active');
-        document.body.classList.add('theatre-view-active');
+        if (hasGSAP) gsap.set(theatreImg, { clearProps: 'all' });
+        theatreImg.src = lightboxList[lightboxIndex];
+        updateCounterAndNav(0);
+        preloadNeighbours();
+        if (animate && originEl) {
+            zoomOpen(originEl);
+        } else {
+            theatreView.classList.add('active');
+            document.body.classList.add('theatre-view-active');
+        }
     };
 
     function closeTheatreView() {
-        if (theatreView) theatreView.classList.remove('active');
+        if (!theatreView) return;
+        if (animate && theatreImg) {
+            gsap.to(theatreImg, { scale: 0.93, opacity: 0, duration: 0.25, ease: 'power2.in' });
+        }
+        theatreView.classList.remove('active');
         document.body.classList.remove('theatre-view-active');
-        setTimeout(() => { if (theatreImg) theatreImg.src = ''; }, 300);
+        setTimeout(() => {
+            if (theatreImg) {
+                theatreImg.src = '';
+                if (hasGSAP) gsap.set(theatreImg, { clearProps: 'all' });
+            }
+        }, 300);
     }
 
     // --- 9. Unified scroll states (back-to-top + progress ring, nav condense, scroll cue) ---

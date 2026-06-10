@@ -835,6 +835,52 @@ a.button-link, a.social-link { text-decoration: none; }
 .contact-intro { text-align: center; color: #B8BABD; margin-bottom: 30px; }
 .contact-intro a { color: #5764F1; text-decoration: none; }
 
+/* --- Thanks Page --- */
+.thanks-main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.thanks-card {
+    background-color: #2E3035;
+    border: 1px solid rgba(83, 88, 96, 0.5);
+    border-radius: 12px;
+    padding: 48px 44px;
+    max-width: 460px;
+    text-align: center;
+    animation: riseIn 0.6s var(--ease-out) backwards;
+}
+.thanks-card h1 {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #FEFEFE;
+    margin: 18px 0 10px;
+}
+.thanks-card p { color: var(--text-muted); margin-bottom: 26px; }
+.thanks-check { width: 64px; height: 64px; }
+.thanks-check circle,
+.thanks-check path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+/* Self-completing draw-in (reduced motion finishes them instantly) */
+.tc-circle {
+    stroke-dasharray: 151;
+    stroke-dashoffset: 151;
+    animation: drawStroke 0.6s var(--ease-out) 0.2s forwards;
+}
+.tc-tick {
+    stroke-dasharray: 36;
+    stroke-dashoffset: 36;
+    animation: drawStroke 0.4s var(--ease-out) 0.7s forwards;
+}
+@keyframes drawStroke { to { stroke-dashoffset: 0; } }
+
 /* --- WORK PAGE STYLES --- */
 #work-gallery-section { padding-top: 10px; }
 
@@ -983,7 +1029,9 @@ a.button-link, a.social-link { text-decoration: none; }
 /* --- Theatre View --- */
 .theatre-view {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(10, 10, 10, 0.95);
+    background-color: rgba(10, 10, 12, 0.8);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     display: flex; justify-content: center; align-items: center;
     z-index: 2000; padding: 20px;
     opacity: 0;
@@ -991,10 +1039,29 @@ a.button-link, a.social-link { text-decoration: none; }
     transition: opacity 0.3s ease;
 }
 .theatre-view.active { opacity: 1; pointer-events: auto; }
+.theatre-view-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .theatre-view-content img {
     max-width: 92vw; max-height: 88vh;
     box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     border-radius: 2px;
+}
+/* While the zoom clone flies, the real chrome stays hidden */
+.theatre-view.is-zooming .theatre-view-content img,
+.theatre-view.is-zooming .theatre-view-close,
+.theatre-view.is-zooming .theatre-view-nav,
+.theatre-view.is-zooming .theatre-view-counter { opacity: 0; }
+.theatre-view-close,
+.theatre-view-nav,
+.theatre-view-counter { transition: opacity 0.25s ease, background 0.25s ease; }
+.theatre-zoom-clone {
+    pointer-events: none;
+    object-fit: cover;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
 }
 .theatre-view-close {
     position: absolute; top: 20px; right: 30px;
