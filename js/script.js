@@ -230,6 +230,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const apWrap = container.querySelector('.jl-autoplay-progress');
         const apBar = apWrap ? apWrap.querySelector('span') : null;
+        // Reduced motion: no autoplay, and the progress bar stays hidden
+        if (reduceMotion && apWrap) apWrap.classList.add('is-idle');
 
         const swiperWrapper = container.querySelector('.swiper-wrapper');
 
@@ -246,8 +248,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `;
             }
-            slide.innerHTML = `<img src="${item.src}" alt="${item.alt || 'Work'}" loading="lazy">${captionHtml}`;
+            slide.innerHTML = `<img src="${item.src}" alt="${item.alt || 'Work'}" loading="lazy" tabindex="0" role="button">${captionHtml}`;
             swiperWrapper.appendChild(slide);
+        });
+
+        // Keyboard access to the lightbox from carousel photos
+        swiperWrapper.addEventListener('keydown', e => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const img = e.target.closest('.swiper-slide img');
+            if (!img) return;
+            e.preventDefault();
+            const srcs = slidesData.map(s => s.src);
+            const idx = srcs.indexOf(img.getAttribute('src'));
+            window.openTheatreView(srcs, idx < 0 ? 0 : idx);
         });
 
         new Swiper('.jl-swiper', {
@@ -257,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
             spaceBetween: 30,
             speed: 800,
             grabCursor: true,
-            autoplay: { delay: 5000, disableOnInteraction: true },
+            autoplay: reduceMotion ? false : { delay: 5000, disableOnInteraction: true },
             pagination: { el: '.swiper-pagination', clickable: true },
             navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
             on: {
@@ -356,17 +369,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     applyFilter(filterValue);
                     const newH = galleryGrid.offsetHeight;
                     // absolute:true pulls items out of column flow during the
-                    // animation — tween the grid's height so the page below
-                    // doesn't collapse and jump
+                    // animation — pin the grid's height for the FULL flip
+                    // (0.55s + 0.15s stagger) and release it only onComplete,
+                    // or the still-absolute items would collapse the grid
                     gsap.fromTo(galleryGrid, { height: oldH }, {
-                        height: newH, duration: 0.55, ease: 'power2.inOut', clearProps: 'height'
+                        height: newH, duration: 0.7, ease: 'power2.inOut'
                     });
                     Flip.from(state, {
                         duration: 0.55, ease: 'power2.inOut', absolute: true, scale: true,
                         stagger: { amount: 0.15 },
                         onEnter: els => gsap.fromTo(els, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' }),
                         onLeave: els => gsap.to(els, { opacity: 0, scale: 0.92, duration: 0.3, ease: 'power2.in' }),
-                        onComplete: refreshScroll
+                        onComplete() {
+                            gsap.set(galleryGrid, { clearProps: 'height' });
+                            refreshScroll();
+                        }
                     });
                 } catch (err) {
                     applyFilter(filterValue);
@@ -375,18 +392,37 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Lightbox open on image click — browse only the currently-visible
-        // photos; the clicked image is the zoom origin
-        galleryGrid.addEventListener('click', e => {
-            const img = e.target.closest('.gallery-item img');
-            if (!img) return;
-            e.preventDefault();
+        // Lightbox open — browse only the currently-visible photos; the
+        // clicked image is the zoom origin. Items are keyboard-activatable.
+        const openFromGallery = img => {
             const visibleImgs = galleryItems
                 .filter(it => it.style.display !== 'none')
                 .map(it => it.querySelector('img'));
             const srcs = visibleImgs.map(im => im.src);
             const idx = visibleImgs.indexOf(img);
             window.openTheatreView(srcs, idx < 0 ? 0 : idx, img);
+        };
+
+        galleryItems.forEach(item => {
+            item.setAttribute('tabindex', '0');
+            item.setAttribute('role', 'button');
+            item.setAttribute('aria-label', 'View ' + (item.dataset.category || 'photo') + ' photo');
+        });
+
+        galleryGrid.addEventListener('click', e => {
+            const img = e.target.closest('.gallery-item img');
+            if (!img) return;
+            e.preventDefault();
+            openFromGallery(img);
+        });
+
+        galleryGrid.addEventListener('keydown', e => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const item = e.target.closest('.gallery-item');
+            if (!item) return;
+            e.preventDefault();
+            const img = item.querySelector('img');
+            if (img) openFromGallery(img);
         });
 
         window.addEventListener('resize', refreshScroll);
@@ -575,6 +611,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             if (!valid) {
                 e.preventDefault();
+                // Move focus to the first failing field so the failure is
+                // announced to AT and visible regardless of colour perception
+                const firstInvalid = form.querySelector('[aria-invalid="true"]');
+                if (firstInvalid) firstInvalid.focus();
             } else {
                 // Real submit proceeds (FormSubmit navigates to thanks.html);
                 // lock the button width so the spinner doesn't reflow it
@@ -591,25 +631,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- 8. Theatre View (lightbox: zoom-from-thumbnail, directional steps,
     //         counter tick, keyboard, swipe) ---
-    let theatreView, theatreContent, theatreImg, theatreCounter;
+    let theatreView, theatreContent, theatreImg, theatreCounter, theatreCounterText;
     let lightboxList = [];
     let lightboxIndex = 0;
+    let closeTimer = null;          // pending src-wipe from the last close
+    let zoomFailsafeTimer = null;   // pending is-zooming cleanup
+    let activeZoomClone = null;     // flying clone, if any
+    let lastFocusedEl = null;       // focus restore target on close
 
     function createTheatreView() {
         if (document.getElementById('jl-theatre-view')) return;
         theatreView = document.createElement('div');
         theatreView.className = 'theatre-view';
         theatreView.id = 'jl-theatre-view';
+        theatreView.setAttribute('role', 'dialog');
+        theatreView.setAttribute('aria-modal', 'true');
+        theatreView.setAttribute('aria-label', 'Photo viewer');
         theatreView.innerHTML = `
             <button class="theatre-view-close" aria-label="Close">&times;</button>
             <button class="theatre-view-nav theatre-view-prev" aria-label="Previous">&#10094;</button>
             <button class="theatre-view-nav theatre-view-next" aria-label="Next">&#10095;</button>
             <div class="theatre-view-content"><img src="" alt="Gallery photo"></div>
-            <div class="theatre-view-counter"></div>`;
+            <div class="theatre-view-counter"><span></span></div>`;
         document.body.appendChild(theatreView);
         theatreContent = theatreView.querySelector('.theatre-view-content');
         theatreImg = theatreContent.querySelector('img');
         theatreCounter = theatreView.querySelector('.theatre-view-counter');
+        // The tick tween runs on the inner span so GSAP never touches the
+        // outer pill's CSS translateX(-50%) centring
+        theatreCounterText = theatreCounter.querySelector('span');
 
         theatreView.addEventListener('click', (e) => {
             if (e.target === theatreView || e.target.closest('.theatre-view-close')) { closeTheatreView(); return; }
@@ -637,10 +687,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateCounterAndNav(dir) {
         const multiple = lightboxList.length > 1;
-        theatreCounter.textContent = multiple ? `${lightboxIndex + 1} / ${lightboxList.length}` : '';
+        theatreCounterText.textContent = multiple ? `${lightboxIndex + 1} / ${lightboxList.length}` : '';
+        theatreCounter.style.display = multiple ? '' : 'none';
         theatreView.querySelectorAll('.theatre-view-nav').forEach(b => b.style.display = multiple ? 'flex' : 'none');
         if (animate && dir) {
-            gsap.fromTo(theatreCounter, { y: 6 * dir, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });
+            gsap.fromTo(theatreCounterText, { y: 6 * dir, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });
         }
     }
 
@@ -683,17 +734,30 @@ document.addEventListener('DOMContentLoaded', function () {
     // Zoom-from-thumbnail: a fixed clone flies from the clicked photo's rect
     // to the final centred rect, colourising mid-flight, then hands over to
     // the real lightbox image underneath.
+    function discardZoomClone() {
+        clearTimeout(zoomFailsafeTimer);
+        if (activeZoomClone) {
+            if (hasGSAP) gsap.killTweensOf(activeZoomClone);
+            if (activeZoomClone.parentNode) activeZoomClone.remove();
+            activeZoomClone = null;
+        }
+        if (theatreView) theatreView.classList.remove('is-zooming');
+    }
+
     function zoomOpen(originImg) {
         const rect = originImg.getBoundingClientRect(); // capture before scroll lock
         theatreView.classList.add('active', 'is-zooming');
         document.body.classList.add('theatre-view-active');
         const natW = originImg.naturalWidth || rect.width;
         const natH = originImg.naturalHeight || rect.height;
-        const s = Math.min(window.innerWidth * 0.92 / natW, window.innerHeight * 0.88 / natH);
+        // Clamp ≤ 1 so the clone never lands larger than the real image
+        // (max-width/height never upscale past natural size)
+        const s = Math.min(1, window.innerWidth * 0.92 / natW, window.innerHeight * 0.88 / natH);
         const dw = natW * s, dh = natH * s;
         const dx = (window.innerWidth - dw) / 2, dy = (window.innerHeight - dh) / 2;
         const clone = originImg.cloneNode();
         clone.className = 'theatre-zoom-clone';
+        activeZoomClone = clone;
         gsap.set(clone, {
             position: 'fixed', left: dx, top: dy, width: dw, height: dh, zIndex: 2100,
             margin: 0, borderRadius: 4,
@@ -708,13 +772,16 @@ document.addEventListener('DOMContentLoaded', function () {
             duration: 0.5, ease: 'power3.inOut',
             onComplete() {
                 theatreView.classList.remove('is-zooming');
-                clone.remove();
+                if (clone.parentNode) clone.remove();
+                if (activeZoomClone === clone) activeZoomClone = null;
             }
         });
         // Failsafe: never leave the chrome hidden or the clone stranded
-        setTimeout(() => {
+        clearTimeout(zoomFailsafeTimer);
+        zoomFailsafeTimer = setTimeout(() => {
             theatreView.classList.remove('is-zooming');
             if (clone.parentNode) clone.remove();
+            if (activeZoomClone === clone) activeZoomClone = null;
         }, 1200);
     }
 
@@ -722,33 +789,52 @@ document.addEventListener('DOMContentLoaded', function () {
     // optional thumbnail element to zoom from. A single src string also works.
     window.openTheatreView = function (list, index, originEl) {
         if (!theatreView) createTheatreView();
+        // Cancel anything a recent close left in flight, or it would blank
+        // this fresh open (stale src-wipe timer + still-active fade tween)
+        clearTimeout(closeTimer);
+        discardZoomClone();
         lightboxList = Array.isArray(list) ? list : [list];
         lightboxIndex = index || 0;
-        if (hasGSAP) gsap.set(theatreImg, { clearProps: 'all' });
+        if (hasGSAP) {
+            gsap.killTweensOf(theatreImg);
+            gsap.set(theatreImg, { clearProps: 'all' });
+        }
         theatreImg.src = lightboxList[lightboxIndex];
         updateCounterAndNav(0);
         preloadNeighbours();
+        lastFocusedEl = document.activeElement;
         if (animate && originEl) {
             zoomOpen(originEl);
         } else {
             theatreView.classList.add('active');
             document.body.classList.add('theatre-view-active');
         }
+        // Deferred so the style recalc making the dialog visible lands first
+        setTimeout(() => {
+            const closeBtn = theatreView.querySelector('.theatre-view-close');
+            if (closeBtn && theatreView.classList.contains('active')) closeBtn.focus();
+        }, 30);
     };
 
     function closeTheatreView() {
         if (!theatreView) return;
+        discardZoomClone(); // Esc mid-zoom: don't leave the clone flying over the page
         if (animate && theatreImg) {
             gsap.to(theatreImg, { scale: 0.93, opacity: 0, duration: 0.25, ease: 'power2.in' });
         }
         theatreView.classList.remove('active');
         document.body.classList.remove('theatre-view-active');
-        setTimeout(() => {
+        clearTimeout(closeTimer);
+        closeTimer = setTimeout(() => {
             if (theatreImg) {
                 theatreImg.src = '';
                 if (hasGSAP) gsap.set(theatreImg, { clearProps: 'all' });
             }
         }, 300);
+        if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+            lastFocusedEl.focus();
+            lastFocusedEl = null;
+        }
     }
 
     // --- 9. Unified scroll states (back-to-top + progress ring, nav condense, scroll cue) ---

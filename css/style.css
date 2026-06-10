@@ -52,6 +52,12 @@ html {
     /* Reserve the scrollbar gutter so locking scroll (lightbox) never shifts the page */
     scrollbar-gutter: stable;
 }
+/* The splash never scrolls — don't reserve a gutter that would leave a dark
+   stripe beside the full-bleed slideshow on classic-scrollbar platforms.
+   (:has support is a superset of scrollbar-gutter support.) */
+html:has(body.landing-page) {
+    scrollbar-gutter: auto;
+}
 * {
     scrollbar-width: thin;
     scrollbar-color: #4E535B transparent;
@@ -192,7 +198,7 @@ html {
 /* Sliding active-link indicator (created by JS; per-link underline is the no-JS fallback) */
 .nav-indicator {
     position: absolute;
-    bottom: 0;
+    bottom: -3px; /* aligns with the links' padding-box underline position */
     left: 0;
     height: 2px;
     width: 0;
@@ -529,8 +535,8 @@ a.button-link, a.social-link { text-decoration: none; }
     justify-content: center;
     padding-top: 8px;
 }
-.scroll-cue { transition: opacity 0.4s ease; }
-.scroll-cue.is-hidden { opacity: 0; pointer-events: none; }
+.scroll-cue { transition: opacity 0.4s ease, visibility 0.4s; }
+.scroll-cue.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 .scroll-cue-arrow {
     width: 5px;
     height: 5px;
@@ -570,9 +576,11 @@ a.button-link, a.social-link { text-decoration: none; }
     height: 42px;
     transition: transform var(--dur-med) var(--ease-spring), background-color var(--dur-med) ease;
 }
-.footer-socials .social-link:hover .social-icon {
-    transform: translateY(-4px);
-    background-color: var(--accent);
+@media (hover: hover) {
+    .footer-socials .social-link:hover .social-icon {
+        transform: translateY(-4px);
+        background-color: var(--accent);
+    }
 }
 
 /* --- Back to Top Button --- */
@@ -1040,10 +1048,18 @@ a.button-link, a.social-link { text-decoration: none; }
     display: flex; justify-content: center; align-items: center;
     z-index: 2000; padding: 20px;
     opacity: 0;
+    visibility: hidden; /* keeps the closed dialog out of the tab order */
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    /* visibility flips after the fade-out on close... */
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
-.theatre-view.active { opacity: 1; pointer-events: auto; }
+.theatre-view.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    /* ...but instantly on open, so focus can land inside immediately */
+    transition: opacity 0.3s ease, visibility 0s;
+}
 .theatre-view-content {
     position: relative;
     display: flex;
@@ -1088,7 +1104,7 @@ a.button-link, a.social-link { text-decoration: none; }
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     backdrop-filter: blur(4px);
-    transition: background 0.25s ease;
+    transition: opacity 0.25s ease, background 0.25s ease;
     z-index: 2;
     user-select: none;
 }
@@ -1109,6 +1125,8 @@ a.button-link, a.social-link { text-decoration: none; }
     border-radius: 999px;
     backdrop-filter: blur(4px);
 }
+/* The tick tween targets this span, leaving the pill's centring untouched */
+.theatre-view-counter span { display: inline-block; }
 
 @media (max-width: 768px) {
     .theatre-view-nav { width: 44px; height: 44px; font-size: 22px; }
@@ -1139,8 +1157,10 @@ body.theatre-view-active { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.001ms !important;
+        animation-delay: 0s !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
+        transition-delay: 0s !important;
         scroll-behavior: auto !important;
     }
     .gallery-item { opacity: 1 !important; }
