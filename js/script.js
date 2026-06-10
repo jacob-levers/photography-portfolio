@@ -225,7 +225,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="swiper-button-prev"></div>
                 <div class="swiper-button-next"></div>
             </div>
+            <div class="jl-autoplay-progress" aria-hidden="true"><span></span></div>
         `;
+
+        const apWrap = container.querySelector('.jl-autoplay-progress');
+        const apBar = apWrap ? apWrap.querySelector('span') : null;
 
         const swiperWrapper = container.querySelector('.swiper-wrapper');
 
@@ -264,7 +268,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         const idx = srcs.indexOf(clickedImg.getAttribute('src')) ;
                         window.openTheatreView(srcs, idx < 0 ? 0 : idx);
                     }
-                }
+                },
+                autoplayTimeLeft(swiper, time, progress) {
+                    if (apBar) apBar.style.transform = `scaleX(${1 - progress})`;
+                },
+                autoplayStop() { if (apWrap) apWrap.classList.add('is-idle'); },
+                autoplayStart() { if (apWrap) apWrap.classList.remove('is-idle'); }
             }
         });
 
@@ -414,18 +423,42 @@ document.addEventListener('DOMContentLoaded', function () {
             heroSection.addEventListener('pointerleave', () => { px(0); py(0); });
         }
 
-        // About: parallax on the profile image + fade-up bio
+        // About: clip-path curtain reveal + parallax on the profile image, staggered bio
         if (document.querySelector('#about .about-image img')) {
+            gsap.fromTo('#about .about-image img',
+                { clipPath: 'inset(0 100% 0 0)', scale: 1.12 },
+                {
+                    clipPath: 'inset(0 0% 0 0)', scale: 1, duration: 1.1, ease: 'power4.inOut',
+                    scrollTrigger: { trigger: '#about .about-image', start: 'top 82%', once: true }
+                });
             gsap.to('#about .about-image img', {
                 yPercent: -12, ease: 'none',
                 scrollTrigger: { trigger: '#about', start: 'top bottom', end: 'bottom top', scrub: true }
             });
         }
-        const aboutReveal = document.querySelectorAll('#about .section-heading, #about .about-bio');
+        const aboutReveal = document.querySelectorAll('#about .section-heading, #about .about-bio h3, #about .about-bio p, #about .about-links');
         if (aboutReveal.length) {
             gsap.from(aboutReveal, {
-                opacity: 0, y: 40, duration: 0.8, ease: 'power2.out', stagger: 0.15,
+                opacity: 0, y: 40, duration: 0.8, ease: 'power2.out', stagger: 0.1,
                 scrollTrigger: { trigger: '#about', start: 'top 75%' }
+            });
+        }
+
+        // Section-heading accent underline draws itself in on first view.
+        // The hidden start state only exists on elements the observer owns.
+        const headings = document.querySelectorAll('.section-heading');
+        if (headings.length && 'IntersectionObserver' in window) {
+            const headingObs = new IntersectionObserver((entries, obs) => {
+                entries.forEach(en => {
+                    if (en.isIntersecting) {
+                        en.target.classList.add('heading-drawn');
+                        obs.unobserve(en.target);
+                    }
+                });
+            }, { threshold: 0.6 });
+            headings.forEach(h => {
+                h.classList.add('heading-anim');
+                headingObs.observe(h);
             });
         }
 
@@ -505,15 +538,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!field.value.trim() || (field.type === 'email' && !field.value.includes('@'))) {
                     valid = false;
                     field.style.borderColor = '#ff6b6b';
+                    field.setAttribute('aria-invalid', 'true');
+                    if (animate) gsap.fromTo(field, { x: -6 }, { x: 0, duration: 0.45, ease: 'elastic.out(1, 0.35)' });
                 } else {
                     field.style.borderColor = '#1F2124';
+                    field.removeAttribute('aria-invalid');
                 }
             });
             if (!valid) {
                 e.preventDefault();
             } else {
+                // Real submit proceeds (FormSubmit navigates to thanks.html);
+                // lock the button width so the spinner doesn't reflow it
                 const btn = form.querySelector('button');
-                if (btn) { btn.textContent = 'Sending...'; btn.disabled = true; }
+                if (btn) {
+                    btn.style.width = btn.offsetWidth + 'px';
+                    btn.classList.add('is-sending');
+                    btn.innerHTML = '<span class="btn-spinner"></span>Sending…';
+                    btn.disabled = true;
+                }
             }
         });
     });

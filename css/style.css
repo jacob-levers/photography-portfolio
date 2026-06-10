@@ -121,6 +121,12 @@ html {
     margin: 14px auto 0;
     border-radius: 3px;
 }
+/* Underline draws itself in on first view (.heading-anim added by JS only) */
+.section-heading.heading-anim::after {
+    transform: scaleX(0);
+    transition: transform 0.7s var(--ease-out) 0.15s;
+}
+.section-heading.heading-anim.heading-drawn::after { transform: scaleX(1); }
 
 /* --- 3. Components --- */
 /* --- Navigation Bar --- */
@@ -537,9 +543,18 @@ a.button-link, a.social-link { text-decoration: none; }
 .site-footer {
     padding: 40px 0;
     text-align: center;
-    border-top: 1px solid rgba(83, 88, 96, 0.4);
+    border-top: none;
+    position: relative;
     color: #71757C;
     font-size: 0.85rem;
+}
+/* Fine accent hairline that fades out toward the edges */
+.site-footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 5%, rgba(87, 100, 241, 0.45) 50%, transparent 95%);
 }
 .footer-socials {
     margin-bottom: 22px;
@@ -548,6 +563,11 @@ a.button-link, a.social-link { text-decoration: none; }
 .footer-socials .social-icon {
     width: 42px;
     height: 42px;
+    transition: transform var(--dur-med) var(--ease-spring), background-color var(--dur-med) ease;
+}
+.footer-socials .social-link:hover .social-icon {
+    transform: translateY(-4px);
+    background-color: var(--accent);
 }
 
 /* --- Back to Top Button --- */
@@ -677,8 +697,8 @@ a.button-link, a.social-link { text-decoration: none; }
     padding: 30px 20px 20px 20px;
     pointer-events: none;
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
+    transform: translateY(14px);
+    transition: opacity 0.45s var(--ease-out) 0.25s, transform 0.45s var(--ease-out) 0.25s;
 }
 
 .swiper-slide-active .jl-carousel-slide-caption {
@@ -709,6 +729,26 @@ a.button-link, a.social-link { text-decoration: none; }
     background: #5764F1;
 }
 
+/* Autoplay progress bar under the carousel */
+.jl-autoplay-progress {
+    position: relative;
+    height: 2px;
+    max-width: 280px;
+    margin: 14px auto 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+}
+.jl-autoplay-progress.is-idle { opacity: 0; }
+.jl-autoplay-progress span {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform-origin: left center;
+    transform: scaleX(0);
+}
+
 .swiper-pagination-bullet {
     background: #B8BABD !important;
     opacity: 0.5 !important;
@@ -736,23 +776,57 @@ a.button-link, a.social-link { text-decoration: none; }
 .form-group { margin-bottom: 20px; }
 .form-group label {
     display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #B8BABD; text-transform: uppercase;
+    transition: color var(--dur-fast) ease, letter-spacing var(--dur-fast) ease;
 }
+.form-group:focus-within label { color: var(--accent); letter-spacing: 1px; }
 .form-group input, .form-group textarea {
     width: 100%; padding: 12px; border: 1px solid #1F2124; background-color: #1F2124;
     border-radius: 3px; font-size: 1rem; color: #DADBDF; font-family: inherit;
+    /* Accent underline grows from the left on focus */
+    background-image: linear-gradient(var(--accent), var(--accent));
+    background-size: 0% 2px;
+    background-position: left bottom;
+    background-repeat: no-repeat;
+    transition: background-size var(--dur-med) var(--ease-out), border-color var(--dur-fast) ease;
 }
-.form-group input:focus, .form-group textarea:focus { outline: none; border-color: #5764F1; }
+.form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #5764F1;
+    background-size: 100% 2px;
+}
 .contact-form .btn { width: 100%; font-size: 1rem; padding: 12px; }
+
+/* Sending state */
+.btn.is-sending { pointer-events: none; opacity: 0.85; }
+.btn-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    margin-right: 9px;
+    vertical-align: -2px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* --- About Page Styles --- */
 #about-section .container { padding-top: 20px; padding-bottom: 40px; }
 .about-content-wrapper { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
-.about-image { flex: 1 1 300px; max-width: 330px; margin: 0 auto 20px auto; }
+.about-image { flex: 1 1 300px; max-width: 330px; margin: 0 auto 20px auto; overflow: hidden; border-radius: 8px; }
 .about-image img { width: 100%; height: auto; border-radius: 8px; box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25); display: block; }
 .about-bio { flex: 2 1 480px; }
 .about-bio h2 { font-size: 1.8rem; color: #FEFEFE; margin-top: 0; }
 .about-bio p { color: #B8BABD; margin-bottom: 15px; }
 .about-links { margin-top: 25px; display: flex; gap: 15px; }
+/* Arrow nudge on the about buttons (sheen owns ::before) */
+.about-links .btn::after {
+    content: '\2197';
+    display: inline-block;
+    margin-left: 8px;
+    transition: transform var(--dur-med) var(--ease-spring);
+}
+.about-links .btn:hover::after { transform: translate(3px, -3px); }
 .contact-invitation { border-top: 1px solid #4E535B; padding-top: 20px; margin-top: 30px; color: #B8BABD; }
 .contact-invitation a { color: #5764F1; text-decoration: none; }
 
