@@ -350,8 +350,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- 6. Scroll-spy (active nav link) ---
+    // --- 6. Scroll-spy (active nav link) + sliding indicator ---
     const navLinks = document.querySelectorAll('.main-nav a[href^="#"]');
+    const navUl = document.querySelector('.main-nav ul');
+    let moveIndicator = () => {};
+
+    if (navUl) {
+        navUl.classList.add('nav-has-indicator');
+        const indicator = document.createElement('span');
+        indicator.className = 'nav-indicator';
+        indicator.setAttribute('aria-hidden', 'true');
+        navUl.appendChild(indicator);
+
+        moveIndicator = () => {
+            const active = navUl.querySelector('a.active');
+            if (!active) { indicator.style.opacity = '0'; return; }
+            const ulRect = navUl.getBoundingClientRect();
+            const r = active.getBoundingClientRect();
+            indicator.style.opacity = '1';
+            indicator.style.transform = `translateX(${r.left - ulRect.left}px)`;
+            indicator.style.width = r.width + 'px';
+        };
+
+        // Optimistic move on click; the spy re-confirms as the scroll settles
+        navUl.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', () => {
+                navLinks.forEach(l => l.classList.remove('active'));
+                a.classList.add('active');
+                moveIndicator();
+            });
+        });
+
+        let nrTimer;
+        window.addEventListener('resize', () => { clearTimeout(nrTimer); nrTimer = setTimeout(moveIndicator, 150); });
+        // Inter loading changes link widths — re-measure once fonts land
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveIndicator);
+        moveIndicator();
+    }
+
     if (navLinks.length && 'IntersectionObserver' in window) {
         const sections = Array.from(navLinks)
             .map(a => document.querySelector(a.getAttribute('href')))
@@ -365,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (link) link.classList.add('active');
                 }
             });
+            moveIndicator();
         }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
 
         sections.forEach(s => spy.observe(s));
@@ -467,14 +504,37 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => { if (theatreImg) theatreImg.src = ''; }, 300);
     }
 
-    // --- 9. Back to Top ---
+    // --- 9. Unified scroll states (back-to-top + progress ring, nav condense, scroll cue) ---
     const backToTop = document.getElementById('back-to-top');
+    const mainHeader = document.querySelector('.main-header');
+    const heroScrollCue = document.querySelector('.scroll-cue');
+    const bttRing = backToTop ? backToTop.querySelector('.btt-ring-progress') : null;
+    const RING_C = 2 * Math.PI * 21;
+
+    if (bttRing) {
+        bttRing.style.strokeDasharray = RING_C;
+        bttRing.style.strokeDashoffset = RING_C;
+    }
     if (backToTop) {
-        const toggleBackToTop = () => backToTop.classList.toggle('visible', window.scrollY > 600);
-        toggleBackToTop();
-        window.addEventListener('scroll', toggleBackToTop, { passive: true });
         backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     }
+
+    let scrollTick = false;
+    function onScrollFrame() {
+        scrollTick = false;
+        const y = window.scrollY;
+        if (backToTop) backToTop.classList.toggle('visible', y > 600);
+        if (mainHeader) mainHeader.classList.toggle('is-scrolled', y > 8);
+        if (heroScrollCue) heroScrollCue.classList.toggle('is-hidden', y > 40);
+        if (bttRing) {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            bttRing.style.strokeDashoffset = RING_C * (1 - (max > 0 ? Math.min(1, y / max) : 0));
+        }
+    }
+    onScrollFrame();
+    window.addEventListener('scroll', () => {
+        if (!scrollTick) { scrollTick = true; requestAnimationFrame(onScrollFrame); }
+    }, { passive: true });
 
     // --- 10. Hero snap: frame the art, or commit to leaving as soon as you stop ---
     (function heroSnap() {
