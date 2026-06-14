@@ -1136,6 +1136,14 @@ a.button-link, a.social-link { text-decoration: none; }
 }
 
 body.theatre-view-active { overflow: hidden; }
+/* Hide page chrome while the photo viewer is open (it sits behind the
+   blurred backdrop and would otherwise faintly bleed through the top) */
+body.theatre-view-active .main-header,
+body.theatre-view-active #back-to-top {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
 
 @media (max-width: 768px) {
     /* Stacked nav is taller — push anchored sections clear of it */
