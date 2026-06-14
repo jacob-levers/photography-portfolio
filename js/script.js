@@ -704,21 +704,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Remove any outgoing "ghost" frames left over from a previous step
+    function clearGhosts() {
+        theatreContent.querySelectorAll('.tv-ghost').forEach(g => {
+            if (hasGSAP) gsap.killTweensOf(g);
+            g.remove();
+        });
+    }
+
     function setImage(src, dir) {
+        // There is always exactly ONE in-flow image (theatreImg). The outgoing
+        // frame becomes an absolutely-positioned ghost, so two images can never
+        // sit side-by-side in the centred flex box (the half-shifted-stuck bug).
+        clearGhosts();
         if (animate && dir) {
-            // Directional crossfade: old image slides out, new slides in
-            gsap.killTweensOf(theatreContent.querySelectorAll('img'));
-            theatreContent.querySelectorAll('img').forEach(im => { if (im !== theatreImg) im.remove(); });
-            const old = theatreImg;
-            const next = old.cloneNode();
-            next.src = src;
-            gsap.set(next, { opacity: 0, x: 44 * dir });
-            theatreContent.appendChild(next);
-            theatreImg = next;
-            gsap.set(old, { position: 'absolute' }); // new img takes the flex slot
-            gsap.to(old, { opacity: 0, x: -44 * dir, duration: 0.28, ease: 'power2.in', onComplete: () => old.remove() });
-            gsap.to(next, { opacity: 1, x: 0, duration: 0.42, ease: 'power3.out' });
+            gsap.killTweensOf(theatreImg);
+            const ghost = theatreImg.cloneNode();
+            ghost.className = 'tv-ghost';
+            ghost.removeAttribute('srcset');
+            ghost.removeAttribute('sizes');
+            ghost.src = theatreImg.currentSrc || theatreImg.src; // already-loaded frame
+            ghost.style.cssText = 'position:absolute; inset:0; margin:auto; pointer-events:none;';
+            theatreContent.appendChild(ghost);
+            gsap.set(ghost, { x: 0, opacity: 1 });
+            gsap.to(ghost, {
+                x: -44 * dir, opacity: 0, duration: 0.3, ease: 'power2.in',
+                onComplete: () => ghost.remove()
+            });
+            // Hard failsafe: guarantee the ghost is gone even if its tween is
+            // interrupted before completing
+            setTimeout(() => { if (ghost.parentNode) { gsap.killTweensOf(ghost); ghost.remove(); } }, 650);
+
+            // The single in-flow image takes the new src and slides in.
+            // overwrite:'auto' + fromTo means a rapid next step resets cleanly
+            // and the x offset can never accumulate.
+            theatreImg.src = src;
+            gsap.fromTo(theatreImg,
+                { x: 44 * dir, opacity: 0 },
+                { x: 0, opacity: 1, duration: 0.42, ease: 'power3.out', overwrite: 'auto' });
         } else {
+            if (hasGSAP) { gsap.killTweensOf(theatreImg); gsap.set(theatreImg, { clearProps: 'transform,opacity' }); }
             theatreImg.src = src;
         }
         updateCounterAndNav(dir);
@@ -793,6 +818,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // this fresh open (stale src-wipe timer + still-active fade tween)
         clearTimeout(closeTimer);
         discardZoomClone();
+        clearGhosts();
         lightboxList = Array.isArray(list) ? list : [list];
         lightboxIndex = index || 0;
         if (hasGSAP) {
@@ -819,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function closeTheatreView() {
         if (!theatreView) return;
         discardZoomClone(); // Esc mid-zoom: don't leave the clone flying over the page
+        clearGhosts();      // and don't leave a half-slid outgoing frame behind
         if (animate && theatreImg) {
             gsap.to(theatreImg, { scale: 0.93, opacity: 0, duration: 0.25, ease: 'power2.in' });
         }
