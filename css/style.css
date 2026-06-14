@@ -391,13 +391,14 @@ html:has(body.landing-page) {
 a.button-link, a.social-link { text-decoration: none; }
 
 #enter-button {
-    background-color: rgba(87, 100, 241, 0.25);
+    background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    border: 1px solid #5764f166;
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.35s ease;
-    text-shadow: 0px 0px 8px rgba(87, 100, 241, 0.5);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
     padding: 18px 70px;
     font-size: 20px;
     font-weight: 500;
@@ -408,9 +409,9 @@ a.button-link, a.social-link { text-decoration: none; }
 }
 
 #enter-button:hover {
-    background-color: rgba(87, 100, 241, 0.4);
+    background-color: rgba(255, 255, 255, 0.2);
     transform: scale(1.03);
-    box-shadow: 0 0 32px 2px rgba(87, 100, 241, 0.45);
+    box-shadow: 0 0 28px 2px rgba(255, 255, 255, 0.18);
 }
 
 .social-icons-container {
