@@ -7,12 +7,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const hasGSAP = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const animate = hasGSAP && !reduceMotion;
-    const hasFlip = hasGSAP && typeof Flip !== 'undefined';
     const fineHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
     if (hasGSAP) {
         gsap.registerPlugin(ScrollTrigger);
-        if (hasFlip) gsap.registerPlugin(Flip);
     }
     // CSS hooks that depend on JS-driven animation hide/reveal scope under this class
     if (animate) document.body.classList.add('js-anim');
@@ -338,8 +336,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!img.complete) img.addEventListener('load', refreshScroll, { once: true });
         });
 
-        // Filter logic — Flip glides items to their new positions; falls
-        // back to the instant toggle without Flip or with reduced motion
+        // Filter logic — fade the set out, swap display, stagger the new set
+        // in. No item is ever taken out of flow, so the columns just reflow.
         const applyFilter = filterValue => {
             galleryItems.forEach(item => {
                 const matches = filterValue === 'all' || item.dataset.category === filterValue;
@@ -356,39 +354,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const filterValue = btn.dataset.filter;
 
-                if (!(animate && hasFlip)) {
-                    applyFilter(filterValue);
-                    refreshScroll();
-                    return;
-                }
+                if (!animate) { applyFilter(filterValue); refreshScroll(); return; }
 
-                try {
-                    Flip.killFlipsOf(galleryItems);
-                    const oldH = galleryGrid.offsetHeight;
-                    const state = Flip.getState(galleryItems);
-                    applyFilter(filterValue);
-                    const newH = galleryGrid.offsetHeight;
-                    // absolute:true pulls items out of column flow during the
-                    // animation — pin the grid's height for the FULL flip
-                    // (0.55s + 0.15s stagger) and release it only onComplete,
-                    // or the still-absolute items would collapse the grid
-                    gsap.fromTo(galleryGrid, { height: oldH }, {
-                        height: newH, duration: 0.7, ease: 'power2.inOut'
-                    });
-                    Flip.from(state, {
-                        duration: 0.55, ease: 'power2.inOut', absolute: true, scale: true,
-                        stagger: { amount: 0.15 },
-                        onEnter: els => gsap.fromTo(els, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' }),
-                        onLeave: els => gsap.to(els, { opacity: 0, scale: 0.92, duration: 0.3, ease: 'power2.in' }),
-                        onComplete() {
-                            gsap.set(galleryGrid, { clearProps: 'height' });
-                            refreshScroll();
-                        }
-                    });
-                } catch (err) {
-                    applyFilter(filterValue);
-                    refreshScroll();
-                }
+                // Fade the current set out, swap, then stagger the new set in.
+                // Items are never position:absolute, so the columns just reflow
+                // naturally and a photo can never be stranded off-screen — even
+                // on rapid filter changes. overwrite/clearProps keep it clean.
+                gsap.killTweensOf(galleryItems);
+                const outgoing = galleryItems.filter(i => i.style.display !== 'none');
+                gsap.to(outgoing, {
+                    opacity: 0, duration: 0.18, ease: 'power1.out', overwrite: true,
+                    onComplete() {
+                        applyFilter(filterValue);
+                        gsap.set(galleryItems, { clearProps: 'opacity,transform' });
+                        const incoming = galleryItems.filter(i => i.style.display !== 'none');
+                        gsap.fromTo(incoming,
+                            { opacity: 0, y: 14 },
+                            { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out',
+                              stagger: 0.025, overwrite: true, clearProps: 'transform' });
+                        refreshScroll();
+                    }
+                });
             });
         });
 
