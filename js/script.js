@@ -18,12 +18,13 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('%c📷 jacoblevers.com', 'color:#5764F1;font-size:14px;font-weight:700;',
         "\nLike the animations? Say hi → hello@jacoblevers.com");
 
-    // --- 0. Hero flow-field background ---
-    // Particles drift along a Perlin-noise vector field, leaving faint trails
-    // that weave into strands. Trails fade fairly quickly so the space keeps
-    // clearing and new patterns form rather than filling up. Own implementation.
-    (function heroFlowField() {
-        const canvas = document.getElementById('hero-canvas');
+    // --- 0. Site-wide flow-field background ---
+    // A fixed, full-viewport canvas behind all content. Particles drift along a
+    // Perlin-noise vector field, leaving faint trails that weave into strands.
+    // Trails fade fairly quickly so the space keeps clearing and new patterns
+    // form rather than filling up. Own implementation.
+    (function siteFlowField() {
+        const canvas = document.getElementById('bg-canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -68,13 +69,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const FADE = 0.16;            // higher = trails clear faster (wispier, never solid)
         let dpr, W, H, particles = [], rafId = null, running = false, time = 0;
 
-        // Cursor gently bends nearby strands (desktop pointers only)
-        const pointer = { cx: -1e4, cy: -1e4, x: -1e4, y: -1e4 };
+        // Cursor gently bends nearby strands anywhere on the page (desktop only).
+        // The canvas is fixed at the viewport origin, so client coords == canvas
+        // coords — no rect math needed.
+        const pointer = { x: -1e4, y: -1e4 };
         const INFLUENCE = 120, INF2 = INFLUENCE * INFLUENCE, FORCE = 1.5;
-        const heroEl = canvas.closest('#hero');
-        if (heroEl && fineHover && !reduceMotion) {
-            heroEl.addEventListener('pointermove', e => { pointer.cx = e.clientX; pointer.cy = e.clientY; }, { passive: true });
-            heroEl.addEventListener('pointerleave', () => { pointer.cx = pointer.cy = -1e4; });
+        if (fineHover && !reduceMotion) {
+            window.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
+            window.addEventListener('blur', () => { pointer.x = pointer.y = -1e4; });
         }
 
         function makeParticle() {
@@ -91,14 +93,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function resize() {
             dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const rect = canvas.getBoundingClientRect();
-            W = rect.width; H = rect.height;
+            W = window.innerWidth; H = window.innerHeight;
             canvas.width = Math.round(W * dpr);
             canvas.height = Math.round(H * dpr);
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.fillStyle = BG;
             ctx.fillRect(0, 0, W, H);
-            const count = Math.min(320, Math.max(120, Math.floor(W * H / 5400)));
+            const count = Math.min(340, Math.max(120, Math.floor(W * H / 5400)));
             particles = Array.from({ length: count }, makeParticle);
         }
 
@@ -109,15 +110,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // The whole field slowly rotates over time so strands morph
             time += FIELD_DRIFT;
-
-            // Resolve the cursor into canvas space once per frame
-            if (pointer.cx > -1e3) {
-                const rect = canvas.getBoundingClientRect();
-                pointer.x = pointer.cx - rect.left;
-                pointer.y = pointer.cy - rect.top;
-            } else {
-                pointer.x = -1e4;
-            }
 
             for (const p of particles) {
                 const angle = perlin(p.x * NOISE_SCALE, p.y * NOISE_SCALE) * Math.PI * FIELD_TURNS + time;
@@ -158,15 +150,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (reduceMotion) { warmUp(180); return; }
 
-        warmUp(90); // pre-weave a little so the hero isn't blank on first paint
+        warmUp(90); // pre-weave so the page isn't blank on first paint
 
-        if ('IntersectionObserver' in window) {
-            new IntersectionObserver(entries => {
-                entries.forEach(e => e.isIntersecting ? start() : stop());
-            }, { threshold: 0 }).observe(canvas);
-        } else {
-            start();
-        }
+        // Full-viewport background → always animate while the tab is visible;
+        // pause when hidden to spare the CPU/battery.
+        start();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stop(); else start();
+        });
     })();
 
     // --- 1. Landing Page Slideshow + exit transition (index.html) ---

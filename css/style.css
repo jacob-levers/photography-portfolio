@@ -458,14 +458,17 @@ a.button-link, a.social-link { text-decoration: none; }
     overflow: hidden;
     padding-top: var(--nav-offset);
 }
-/* Flow-field animated background canvas */
-#hero-canvas {
-    position: absolute;
+/* Site-wide flow-field background: fixed behind all content. The body's
+   #2e313a background sits behind it, content sits above (transparent), so
+   the animation shows through the whole page. */
+#bg-canvas {
+    position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
+    z-index: -1;
     display: block;
+    pointer-events: none;
 }
 /* Soft radial darkening behind the hero text for legibility over the canvas */
 .hero-section::after {
