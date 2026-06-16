@@ -203,9 +203,13 @@
                     I'd love to hear from you. Fill out the form below, or email me directly at
                     <a href="mailto:hello@jacoblevers.com" class="email-link">hello@jacoblevers.com</a>.
                 </p>
-                <form class="contact-form" action="https://formsubmit.co/hello@jacoblevers.com" method="POST">
-                    <input type="hidden" name="_next" value="https://jacoblevers.com/thanks.html">
-                    <input type="hidden" name="_captcha" value="false">
+                <form class="contact-form" action="https://api.web3forms.com/submit" method="POST">
+                    <input type="hidden" name="access_key" value="6261f550-e1be-46e0-b4c7-37010552a0ad">
+                    <input type="hidden" name="subject" value="New message from jacoblevers.com">
+                    <input type="hidden" name="from_name" value="jacoblevers.com">
+                    <input type="hidden" name="redirect" value="https://jacoblevers.com/thanks.html">
+                    <!-- Honeypot: bots fill this, humans can't see it -->
+                    <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
                     <div class="form-group">
                         <label for="contact-name">Name</label>
