@@ -12,9 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (hasGSAP) {
         gsap.registerPlugin(ScrollTrigger);
     }
-    // CSS hooks that depend on JS-driven animation hide/reveal scope under this class
-    if (animate) document.body.classList.add('js-anim');
-
     console.log('%c📷 jacoblevers.com', 'color:#5764F1;font-size:14px;font-weight:700;',
         "\nLike the animations? Say hi → hello@jacoblevers.com");
 
@@ -146,11 +143,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         resize();
         let rt;
-        window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { resize(); warmUp(90); }, 200); });
+        // 40 frames is enough pre-weave: with FADE 0.16 anything older is
+        // already faded out, so more frames add main-thread cost, not visuals
+        window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { resize(); warmUp(40); }, 200); });
 
-        if (reduceMotion) { warmUp(180); return; }
+        if (reduceMotion) { warmUp(60); return; }
 
-        warmUp(90); // pre-weave so the page isn't blank on first paint
+        warmUp(40); // pre-weave so the page isn't blank on first paint
 
         // Full-viewport background → always animate while the tab is visible;
         // pause when hidden to spare the CPU/battery.
@@ -196,13 +195,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- 3. Home Page Carousel (Portrait Optimized) ---
     const jlCarouselSection = document.getElementById('featured-photos-home');
     if (jlCarouselSection && typeof Swiper !== 'undefined') {
+        // vw = variant (-960) width, ow = original width, for srcset descriptors
         const slidesData = [
-            { src: 'images/featured/image1.webp', alt: 'Yuri', title: 'Rainbow road', caption: 'She went blind looking at that wall' },
-            { src: 'images/featured/image2.webp', alt: 'Shenelle', title: 'Kangaroo point', caption: 'Taken on our first date - personal fav of mine' },
-            { src: 'images/featured/image3.webp', alt: 'King Glizzard The Wizard Lizard', title: 'Glimpse of us', caption: 'Joji would be proud' },
-            { src: 'images/featured/image4.webp', alt: 'Lilly the cat', title: 'Fleeting feet', caption: 'Trust me this cat MOVES' },
-            { src: 'images/featured/image5.webp', alt: 'Yuri', title: 'Ring around the rosie', caption: "'A tissue, a tissue, we all fall down'" },
-            { src: 'images/featured/image6.webp', alt: 'Yuri', title: 'Cyberpunk', caption: 'Saturated in red' }
+            { src: 'images/featured/image1.webp', vw: 960, ow: 1440, alt: 'Yuri', title: 'Rainbow road', caption: 'She went blind looking at that wall' },
+            { src: 'images/featured/image2.webp', vw: 800, ow: 1200, alt: 'Shenelle', title: 'Kangaroo point', caption: 'Taken on our first date - personal fav of mine' },
+            { src: 'images/featured/image3.webp', vw: 896, ow: 1343, alt: 'King Glizzard The Wizard Lizard', title: 'Glimpse of us', caption: 'Joji would be proud' },
+            { src: 'images/featured/image4.webp', vw: 800, ow: 1200, alt: 'Lilly the cat', title: 'Fleeting feet', caption: 'Trust me this cat MOVES' },
+            { src: 'images/featured/image5.webp', vw: 961, ow: 1441, alt: 'Yuri', title: 'Ring around the rosie', caption: "'A tissue, a tissue, we all fall down'" },
+            { src: 'images/featured/image6.webp', vw: 961, ow: 1441, alt: 'Yuri', title: 'Cyberpunk', caption: 'Saturated in red' }
         ];
 
         const container = jlCarouselSection.querySelector('.container');
@@ -237,7 +237,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `;
             }
-            slide.innerHTML = `<img src="${item.src}" alt="${item.alt || 'Work'}" loading="lazy" tabindex="0" role="button">${captionHtml}`;
+            // Slides render ~50vh wide (2:3 at 75vh tall) — the -960 variant
+            // covers retina; the full-res original stays available for the
+            // lightbox and very large screens
+            const variant = item.src.replace('.webp', '-960.webp');
+            slide.innerHTML = `<img src="${item.src}"
+                srcset="${variant} ${item.vw}w, ${item.src} ${item.ow}w"
+                sizes="(min-width: 768px) 50vh, 40vh"
+                alt="${item.alt || 'Work'}" loading="lazy" tabindex="0" role="button">${captionHtml}`;
             swiperWrapper.appendChild(slide);
         });
 
@@ -247,13 +254,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const img = e.target.closest('.swiper-slide img');
             if (!img) return;
             e.preventDefault();
-            const srcs = slidesData.map(s => s.src);
-            const idx = srcs.indexOf(img.getAttribute('src'));
-            window.openTheatreView(srcs, idx < 0 ? 0 : idx);
+            const idx = slidesData.findIndex(s => s.src === img.getAttribute('src'));
+            window.openTheatreView(slidesData, idx < 0 ? 0 : idx);
         });
 
         new Swiper('.jl-swiper', {
-            loop: true,
+            // rewind (not loop): 6 slides is too few for seamless loop mode
+            // with slidesPerView 'auto' — loop logged a console warning and
+            // could misbehave; rewind wraps end->start cleanly instead
+            rewind: true,
             centeredSlides: true,
             slidesPerView: 'auto',
             spaceBetween: 30,
@@ -266,9 +275,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 click: function (swiper, event) {
                     const clickedImg = event.target.closest('img');
                     if (clickedImg) {
-                        const srcs = slidesData.map(s => s.src);
-                        const idx = srcs.indexOf(clickedImg.getAttribute('src')) ;
-                        window.openTheatreView(srcs, idx < 0 ? 0 : idx);
+                        const idx = slidesData.findIndex(s => s.src === clickedImg.getAttribute('src'));
+                        window.openTheatreView(slidesData, idx < 0 ? 0 : idx);
                     }
                 },
                 autoplayTimeLeft(swiper, time, progress) {
@@ -375,9 +383,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const visibleImgs = galleryItems
                 .filter(it => it.style.display !== 'none')
                 .map(it => it.querySelector('img'));
-            const srcs = visibleImgs.map(im => im.src);
+            const entries = visibleImgs.map(im => ({ src: im.src, alt: im.alt }));
             const idx = visibleImgs.indexOf(img);
-            window.openTheatreView(srcs, idx < 0 ? 0 : idx, img);
+            window.openTheatreView(entries, idx < 0 ? 0 : idx, img);
         };
 
         galleryItems.forEach(item => {
@@ -629,7 +637,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <button class="theatre-view-nav theatre-view-prev" aria-label="Previous">&#10094;</button>
             <button class="theatre-view-nav theatre-view-next" aria-label="Next">&#10095;</button>
             <div class="theatre-view-content"><img src="" alt="Gallery photo"></div>
-            <div class="theatre-view-counter"><span></span></div>`;
+            <div class="theatre-view-counter" aria-live="polite"><span></span></div>`;
         document.body.appendChild(theatreView);
         theatreContent = theatreView.querySelector('.theatre-view-content');
         theatreImg = theatreContent.querySelector('img');
@@ -677,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (n < 2) return;
         [lightboxIndex + 1, lightboxIndex - 1].forEach(k => {
             const im = new Image();
-            im.src = lightboxList[(k % n + n) % n];
+            im.src = lightboxList[(k % n + n) % n].src;
         });
     }
 
@@ -689,10 +697,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function setImage(src, dir) {
+    function setImage(entry, dir) {
         // There is always exactly ONE in-flow image (theatreImg). The outgoing
         // frame becomes an absolutely-positioned ghost, so two images can never
         // sit side-by-side in the centred flex box (the half-shifted-stuck bug).
+        const src = entry.src, alt = entry.alt || 'Gallery photo';
         clearGhosts();
         if (animate && dir) {
             gsap.killTweensOf(theatreImg);
@@ -716,12 +725,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // overwrite:'auto' + fromTo means a rapid next step resets cleanly
             // and the x offset can never accumulate.
             theatreImg.src = src;
+            theatreImg.alt = alt;
             gsap.fromTo(theatreImg,
                 { x: 44 * dir, opacity: 0 },
                 { x: 0, opacity: 1, duration: 0.42, ease: 'power3.out', overwrite: 'auto' });
         } else {
             if (hasGSAP) { gsap.killTweensOf(theatreImg); gsap.set(theatreImg, { clearProps: 'transform,opacity' }); }
             theatreImg.src = src;
+            theatreImg.alt = alt;
         }
         updateCounterAndNav(dir);
         preloadNeighbours();
@@ -787,8 +798,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1200);
     }
 
-    // openTheatreView(list, index, originEl?) — srcs, start index, and an
-    // optional thumbnail element to zoom from. A single src string also works.
+    // openTheatreView(list, index, originEl?) — a list of {src, alt} entries
+    // (bare src strings also accepted), the start index, and an optional
+    // thumbnail element to zoom from.
     window.openTheatreView = function (list, index, originEl) {
         if (!theatreView) createTheatreView();
         // Cancel anything a recent close left in flight, or it would blank
@@ -796,13 +808,15 @@ document.addEventListener('DOMContentLoaded', function () {
         clearTimeout(closeTimer);
         discardZoomClone();
         clearGhosts();
-        lightboxList = Array.isArray(list) ? list : [list];
+        lightboxList = (Array.isArray(list) ? list : [list])
+            .map(x => typeof x === 'string' ? { src: x } : x);
         lightboxIndex = index || 0;
         if (hasGSAP) {
             gsap.killTweensOf(theatreImg);
             gsap.set(theatreImg, { clearProps: 'all' });
         }
-        theatreImg.src = lightboxList[lightboxIndex];
+        theatreImg.src = lightboxList[lightboxIndex].src;
+        theatreImg.alt = lightboxList[lightboxIndex].alt || 'Gallery photo';
         updateCounterAndNav(0);
         preloadNeighbours();
         lastFocusedEl = document.activeElement;
